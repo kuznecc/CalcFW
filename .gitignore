@@ -10,7 +10,6 @@ out/
 *.iws
 *.class
 target/
-
 # Maven
 log/
 target/
