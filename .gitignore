@@ -1,0 +1,16 @@
+# Mac
+*~ #(backup files)
+*.DS_Store #(MacOS dir file)
+*.out #(any file with .out extension)
+
+# Intellij
+.idea/
+out/
+*.iml
+*.iws
+*.class
+target/
+
+# Maven
+log/
+target/
