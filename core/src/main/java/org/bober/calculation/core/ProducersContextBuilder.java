@@ -11,32 +11,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- *  iterate all class fields {
- *      each with @ValuesProducerResult {
- *          - execute this algorithm recursively
- *      }
- *      if all passed or have no any {
- *          - instantiate producer
- *          - set 'producer results' to each field that it need
- *          - put to context
- *      }
+ *  Process Class {
+ *      1. On class annotation 'PrepareValuesProducer' {
+ *          - instantiate all listed producers for future usage and put they to ctx.
+ *          }
+ *      2. Instantiate specified producer
+ *      3. Iterate fields for annotation 'ValuesProducerResult' {
+ *          - if ctx doesn't contain producer from annotation :
+ *                      execute recursively p2-4 for ValuesProducer that mentioned in annotation.
+ *          - Spring @Autowire TODO
+ *          - get needed producer from ctx.
+ *          - prepare ProducerResults and pass it to field
+ *          }
+ *      4. put instance to ctx
  *  }
- *
- *  How to get producer results and how to use this values in other producers?
- *      - instead result value we going to pass wrapper with lazy evaluation.
- *          When you try to get one value - you will activate whole chain of related result calculation
- *          ~ annotations on field: @ValuesProducerResult(producer, result), @Autowired
- *          ~ type of field: ResultWrapper<Type>
- *          ~ Producer : we put instance of it to ctx
- *          ~ Value : +1. we generate wrapper and set it to field manually
- *                     2. we put instance of qualifier to ctx and INVENT MAGIC qualifier logic for spring autowiring.
- *          ~ When we need to wire producer with result of other producer:
- *              - seek in ctx for right wrapper and use. todo
- *              - seek in ctx for right producer instance and use.
- *              - if we can't found it in ctx and it isn't interface than make wrapper, put it to ctx and use.
- *              - recursively invoke this logic for process producer of this result and repeat previous step
- *      -
+ *  TODO: Replace result wrappers with real values
+ *  TODO: Add logic like @Autowired(required=false)
+ *  ProducerResult - it's container that will invoke lazy calculation process of all related producers
  */
 public class ProducersContextBuilder {
 
@@ -84,11 +75,10 @@ public class ProducersContextBuilder {
         putInstanceToCtx(instance, ctx);
     }
 
-    /** each child of ValuesProducer interface can be used for implementing different producers
-                      that can be wired to @ValuesProducerResult via that 'child interface'
-    after instantiating of class and setting all fields we gonna put it to ctx with key 'class'
-       for case when we need to work with different implementation of producers we will wire they via interfaces.
-       so now we will put to ctx this producer instance with their interface as a key.*/
+    /**
+     * Put instance to ctx with few id's.
+     * Id it's object class and all implemented interfaces that extend ValuesProducer interface.
+     */
     private static void putInstanceToCtx(Object instance, Map ctx) {
         Class<?> clazz = instance.getClass();
         ctx.put(clazz, instance);
