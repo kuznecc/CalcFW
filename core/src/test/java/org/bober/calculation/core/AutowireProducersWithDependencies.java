@@ -41,10 +41,10 @@ public class AutowireProducersWithDependencies {
     }
 
     @Test
-    public void test_ComplexProducer() throws Exception {
+    public void test_ProducerCrossDependency() throws Exception {
         // complexP() = p1() + p2(P1)
         TestValueSource.VALUE = TEST_VALUE;
-        TestDto_ComplexProducer dto = flow.produceDto(TestDto_ComplexProducer.class);
+        TestDto_ProducerCrossDependency dto = flow.produceDto(TestDto_ProducerCrossDependency.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult.get(), is(TEST_VALUE*2));
@@ -52,12 +52,12 @@ public class AutowireProducersWithDependencies {
 
 
 
-    public static class TestDto_ComplexProducer {
-        @ValuesProducerResult(producer = TestComplexProducer.class, resultName = RESULT)
+    public static class TestDto_ProducerCrossDependency {
+        @ValuesProducerResult(producer = ProducerCrossDepended.class, resultName = RESULT)
         public ProducerResult<Integer> producerResult;
     }
 
-    public static class TestComplexProducer implements ValuesProducer {
+    public static class ProducerCrossDepended implements ValuesProducer {
         @ValuesProducerResult(producer = TestProducer.class, resultName = RESULT)
         private ProducerResult<Integer> testProducer;
         @ValuesProducerResult(producer = TestValueSource.class, resultName = RESULT)

@@ -1,5 +1,6 @@
 package org.bober.calculation.core;
 
+import org.bober.calculation.core.annotation.PrepareValuesProducer;
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.CalculationFlow;
 import org.bober.calculation.core.interfaces.ProducerResult;
@@ -21,36 +22,23 @@ public class OnDtoClassProducers {
 
     @Test
     public void test_ComplexProducer() throws Exception {
-        // complexP() = p1() + p2(P1)
-        TestValueSource.VALUE = TEST_VALUE;
-        TestDto_ComplexProducer dto = flow.produceDto(TestDto_ComplexProducer.class);
+        TestDto dto = flow.produceDto(TestDto.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.producerResult.get(), is(TEST_VALUE*2));
+        assertThat(dto.producerResult.get(), is(TEST_VALUE));
     }
 
 
 
-    public static class TestDto_ComplexProducer {
-        @ValuesProducerResult(producer = TestComplexProducer.class, resultName = RESULT)
+    @PrepareValuesProducer(ValueSourceImpl.class)
+    public static class TestDto {
+        @ValuesProducerResult(producer = Producer.class, resultName = RESULT)
         public ProducerResult<Integer> producerResult;
     }
 
-    public static class TestComplexProducer implements ValuesProducer {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = RESULT)
-        private ProducerResult<Integer> testProducer;
-        @ValuesProducerResult(producer = TestValueSource.class, resultName = RESULT)
-        private ProducerResult<Integer> valueSource;
 
-        @Override
-        public Map<String, Object> getResult() {
-            return Collections.singletonMap(RESULT, (Object) (valueSource.get() + testProducer.get()));
-        }
-
-    }
-
-    public static class TestProducer implements ValuesProducer {
-        @ValuesProducerResult(producer = TestValueSource.class, resultName = RESULT)
+    public static class Producer implements ValuesProducer {
+        @ValuesProducerResult(producer = ValueSource.class, resultName = RESULT)
         private ProducerResult<Integer> valueSource;
 
         @Override
@@ -60,12 +48,14 @@ public class OnDtoClassProducers {
     }
 
 
-    public static class TestValueSource implements ValuesProducer {
-        public static Integer VALUE;
+    public static class ValueSourceImpl implements ValueSource {
         @Override
         public Map<String, Object> getResult() {
-            return Collections.singletonMap(RESULT, (Object)VALUE);
+            return Collections.singletonMap(RESULT, (Object) TEST_VALUE);
         }
+    }
+
+    public interface ValueSource extends ValuesProducer {
     }
 
 }
