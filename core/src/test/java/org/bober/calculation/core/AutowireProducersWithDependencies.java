@@ -2,17 +2,13 @@ package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.CalculationFlow;
-import org.bober.calculation.core.interfaces.ProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Map;
 
-import static org.bober.calculation.core.interfaces.ValuesProducer.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 public class AutowireProducersWithDependencies {
@@ -27,8 +23,8 @@ public class AutowireProducersWithDependencies {
         TestDto_ProducerWithDepended dto = flow.produceDto(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.producerResult.get(), notNullValue());
-        assertThat(dto.producerResult.get(), is(TEST_VALUE));
+        assertThat(dto.producerResult, notNullValue());
+        assertThat(dto.producerResult, is(TEST_VALUE));
     }
 
     @Test
@@ -37,7 +33,7 @@ public class AutowireProducersWithDependencies {
         TestDto_ProducerWithDepended dto = flow.produceDto(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.producerResult.get(), nullValue());
+        assertThat(dto.producerResult, nullValue());
     }
 
     @Test
@@ -47,41 +43,41 @@ public class AutowireProducersWithDependencies {
         TestDto_ProducerCrossDependency dto = flow.produceDto(TestDto_ProducerCrossDependency.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.producerResult.get(), is(TEST_VALUE*2));
+        assertThat(dto.producerResult, is(TEST_VALUE*2));
     }
 
 
 
     public static class TestDto_ProducerCrossDependency {
-        @ValuesProducerResult(producer = ProducerCrossDepended.class, resultName = RESULT)
-        public ProducerResult<Integer> producerResult;
+        @ValuesProducerResult(producer = ProducerCrossDepended.class)
+        public Integer producerResult;
     }
 
     public static class ProducerCrossDepended implements ValuesProducer {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = RESULT)
-        private ProducerResult<Integer> testProducer;
-        @ValuesProducerResult(producer = TestValueSource.class, resultName = RESULT)
-        private ProducerResult<Integer> valueSource;
+        @ValuesProducerResult(producer = TestProducer.class)
+        private Integer testProducer;
+        @ValuesProducerResult(producer = TestValueSource.class)
+        private Integer valueSource;
 
         @Override
         public Map<String, Object> getResult() {
-            return Collections.singletonMap(RESULT, (Object) (valueSource.get() + testProducer.get()));
+            return Collections.singletonMap(RESULT, (Object) (valueSource + testProducer));
         }
 
     }
 
     public static class TestDto_ProducerWithDepended {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = RESULT)
-        public ProducerResult<Integer> producerResult;
+        @ValuesProducerResult(producer = TestProducer.class, required = false)
+        public Integer producerResult;
     }
 
     public static class TestProducer implements ValuesProducer {
-        @ValuesProducerResult(producer = TestValueSource.class, resultName = RESULT)
-        private ProducerResult<Integer> valueSource;
+        @ValuesProducerResult(producer = TestValueSource.class, required = false)
+        private Integer valueSource;
 
         @Override
         public Map<String, Object> getResult() {
-            return Collections.singletonMap(RESULT, (Object) valueSource.get());
+            return Collections.singletonMap(RESULT, (Object) valueSource);
         }
     }
 

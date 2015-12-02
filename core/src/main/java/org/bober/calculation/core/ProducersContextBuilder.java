@@ -2,11 +2,9 @@ package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.PrepareValuesProducer;
 import org.bober.calculation.core.annotation.ValuesProducerResult;
-import org.bober.calculation.core.interfaces.ProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,9 +23,6 @@ import java.util.Map;
  *          }
  *      4. put instance to ctx
  *  }
- *  TODO: Replace result wrappers with real values
- *  TODO: Add logic like @Autowired(required=false)
- *  ProducerResult - it's container that will invoke lazy calculation process of all related producers
  */
 public class ProducersContextBuilder {
 
@@ -92,21 +87,26 @@ public class ProducersContextBuilder {
         }
     }
 
-    private static void passProducerResultToField(Object instance, Field field, Map ctx) throws Exception{
-        Class<ValuesProducer> relatedProducerClass = (Class<ValuesProducer>) field.getAnnotation(ValuesProducerResult.class).producer();
-        String relatedProducerResultName = field.getAnnotation(ValuesProducerResult.class).resultName();
-        ValuesProducer relatedProducerInstance = (ValuesProducer) ctx.get(relatedProducerClass);
+    private static void passProducerResultToField(Object instance, Field field, Map producersCtx) throws Exception{
+        ValuesProducerResult    annotation = field.getAnnotation(ValuesProducerResult.class);
+        Class<ValuesProducer>   producerClass = (Class<ValuesProducer>) annotation.producer();
+        String                  producerResultName = annotation.resultName();
+        boolean                 required = annotation.required();
+        ValuesProducer          producerInstance = (ValuesProducer) producersCtx.get(producerClass);
+        Object                  producerResult = getProducerResult(producerInstance, producerResultName);
 
-        ProducerResult result = new ProducerResultImpl<>(relatedProducerInstance, relatedProducerResultName);
-
-        field.setAccessible(true);
-        field.set(instance, result);
+        if (producerResult == null && required) {
+            throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
+                    "' unable to find '" + producerClass.getSimpleName() + "' in context - ");
+        }
+        if (producerResult != null) {
+            field.setAccessible(true);
+            field.set(instance, producerResult);
+        }
     }
 
-    /* ================================ */
-    private static Class getGenericType(Field field) {
-        ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
-        return  (Class<?>) parameterizedType.getActualTypeArguments()[0];
+    private static Object getProducerResult(ValuesProducer producerInstance, String producerResultName) {
+        return producerInstance != null && producerInstance.getResult() != null ? producerInstance.getResult().get(producerResultName) : null;
     }
 
 }

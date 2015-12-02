@@ -15,5 +15,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ValuesProducerResult {
     Class<? extends ValuesProducer> producer();
-    String resultName();
+    String resultName() default ValuesProducer.RESULT;
+    boolean required() default true;
 }

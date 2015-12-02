@@ -2,7 +2,6 @@ package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.CalculationFlow;
-import org.bober.calculation.core.interfaces.ProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 import org.junit.Test;
 
@@ -24,8 +23,8 @@ public class AutowireProducers {
         TestDto_OneProducer dto = flow.produceDto(TestDto_OneProducer.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.producerResult.get(), notNullValue());
-        assertThat(dto.producerResult.get(), is(TEST_SIMPLE_PRODUCER_RESULT));
+        assertThat(dto.producerResult, notNullValue());
+        assertThat(dto.producerResult, is(TEST_SIMPLE_PRODUCER_RESULT));
     }
 
     @Test
@@ -33,10 +32,10 @@ public class AutowireProducers {
         TestDto_TwoEqProducers dto = flow.produceDto(TestDto_TwoEqProducers.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.simpleProducerResult.get(), notNullValue());
-        assertThat(dto.anotherSimpleProducerResult.get(), notNullValue());
-        assertThat(dto.simpleProducerResult.get(), is(TEST_SIMPLE_PRODUCER_RESULT));
-        assertThat(dto.anotherSimpleProducerResult.get(), is(TEST_SIMPLE_PRODUCER_RESULT));
+        assertThat(dto.simpleProducerResult, notNullValue());
+        assertThat(dto.anotherSimpleProducerResult, notNullValue());
+        assertThat(dto.simpleProducerResult, is(TEST_SIMPLE_PRODUCER_RESULT));
+        assertThat(dto.anotherSimpleProducerResult, is(TEST_SIMPLE_PRODUCER_RESULT));
     }
 
     @Test
@@ -44,10 +43,10 @@ public class AutowireProducers {
         TestDto_TwoDifProducers dto = flow.produceDto(TestDto_TwoDifProducers.class);
 
         assertThat(dto, notNullValue());
-        assertThat(dto.simpleProducerResult.get(), notNullValue());
-        assertThat(dto.anotherSimpleProducerResult.get(), notNullValue());
-        assertThat(dto.simpleProducerResult.get(), is(TEST_SIMPLE_PRODUCER_RESULT));
-        assertThat(dto.anotherSimpleProducerResult.get(), is(TEST_SIMPLE_PRODUCER_RESULT));
+        assertThat(dto.simpleProducerResult, notNullValue());
+        assertThat(dto.anotherSimpleProducerResult, notNullValue());
+        assertThat(dto.simpleProducerResult, is(TEST_SIMPLE_PRODUCER_RESULT));
+        assertThat(dto.anotherSimpleProducerResult, is(TEST_SIMPLE_PRODUCER_RESULT));
     }
 
     public static class TestProducer implements ValuesProducer {
@@ -67,24 +66,24 @@ public class AutowireProducers {
     }
 
     public static class TestDto_OneProducer {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = TestProducer.RESULT)
-        public ProducerResult<Integer> producerResult;
+        @ValuesProducerResult(producer = TestProducer.class)
+        public Integer producerResult;
     }
 
     public static class TestDto_TwoEqProducers {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = TestProducer.RESULT)
-        public ProducerResult<Integer> simpleProducerResult;
+        @ValuesProducerResult(producer = TestProducer.class)
+        public Integer simpleProducerResult;
 
-        @ValuesProducerResult(producer = TestProducer.class, resultName = TestProducer.RESULT)
-        public ProducerResult<Integer> anotherSimpleProducerResult;
+        @ValuesProducerResult(producer = TestProducer.class)
+        public Integer anotherSimpleProducerResult;
     }
 
     public static class TestDto_TwoDifProducers {
-        @ValuesProducerResult(producer = TestProducer.class, resultName = TestProducer.RESULT)
-        public ProducerResult<Integer> simpleProducerResult;
+        @ValuesProducerResult(producer = TestProducer.class)
+        public Integer simpleProducerResult;
 
-        @ValuesProducerResult(producer = AnotherTestProducer.class, resultName = AnotherTestProducer.RESULT)
-        public ProducerResult<Integer> anotherSimpleProducerResult;
+        @ValuesProducerResult(producer = AnotherTestProducer.class)
+        public Integer anotherSimpleProducerResult;
     }
 
 }
