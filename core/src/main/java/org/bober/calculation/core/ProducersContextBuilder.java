@@ -3,6 +3,8 @@ package org.bober.calculation.core;
 import org.bober.calculation.core.annotation.PrepareValuesProducer;
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -14,34 +16,42 @@ import java.util.Map;
  *          - instantiate all listed producers for future usage and put they to ctx.
  *          }
  *      2. Instantiate specified producer
- *      3. Iterate fields for annotation 'ValuesProducerResult' {
+ *      3. @Autowire beans from Spring context via spring annotations
+ *      4. Iterate fields for annotation 'ValuesProducerResult' {
  *          - if ctx doesn't contain producer from annotation :
- *                      execute recursively p2-4 for ValuesProducer that mentioned in annotation.
- *          - Spring @Autowire TODO
+ *                      execute recursively p2-5 for ValuesProducer that mentioned in annotation.
  *          - get needed producer from ctx.
  *          - prepare ProducerResults and pass it to field
  *          }
- *      4. put instance to ctx
+ *      5. put instance to ctx
  *  }
+ *  todo: cover dto class inheritance
+ *  todo: covet producer class inheritance
+ *  todo: separate spring depended logic for independent usage
+ *  todo: make field annotation that can process result of related producer via SpEL
  */
 public class ProducersContextBuilder {
+    private ApplicationContext springApplicationContext;
 
-    public static <T> T buildDto(Class<T> dtoClazz) {
-        HashMap<Object, Object> ctx = new HashMap<>();
+    public ProducersContextBuilder() {
+    }
 
-        try {
-            instantiateProducersFromDtoClassAnnotation(dtoClazz, ctx);
-            instantiateDtoAndProducersRecursivelyAndWireResults(dtoClazz, ctx);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public ProducersContextBuilder(ApplicationContext springApplicationContext) {
+        this.springApplicationContext = springApplicationContext;
+    }
 
-        T dto = ctx.containsKey(dtoClazz) ? (T) ctx.get(dtoClazz) : null;
+    public <T> T buildDto(Class<T> dtoClazz) {
+        HashMap<Object, Object> calculationCtx = new HashMap<>();
+
+        instantiateProducersFromDtoClassAnnotation(dtoClazz, calculationCtx);
+        instantiateDtoAndProducersRecursivelyAndWireResults(dtoClazz, calculationCtx);
+
+        T dto = calculationCtx.containsKey(dtoClazz) ? (T) calculationCtx.get(dtoClazz) : null;
 
         return dto;
     }
 
-    private static void instantiateProducersFromDtoClassAnnotation(Class<?> clazz, Map ctx) throws Exception {
+    private void instantiateProducersFromDtoClassAnnotation(Class<?> clazz, Map ctx) {
         if (clazz.isAnnotationPresent(PrepareValuesProducer.class)) {
             Class<? extends ValuesProducer>[] onClassProducers = clazz.getAnnotation(PrepareValuesProducer.class).value();
             for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
@@ -50,12 +60,12 @@ public class ProducersContextBuilder {
         }
     }
 
-    private static void instantiateDtoAndProducersRecursivelyAndWireResults(Class clazz, Map ctx) throws Exception{
+    private void instantiateDtoAndProducersRecursivelyAndWireResults(Class clazz, Map ctx){
         if (ctx.containsKey(clazz)) {
             return;
         }
 
-        Object instance = clazz.newInstance();
+        Object instance = newInstance(clazz);
 
         for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(ValuesProducerResult.class)) {
@@ -70,11 +80,27 @@ public class ProducersContextBuilder {
         putInstanceToCtx(instance, ctx);
     }
 
+    private Object newInstance(Class clazz) {
+        if (springApplicationContext != null) {
+            AutowireCapableBeanFactory beanFactory = springApplicationContext.getAutowireCapableBeanFactory();
+            Object bean = beanFactory.createBean(clazz);
+            beanFactory.autowireBean(bean);
+            return bean;
+        }
+
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace(); // todo: remove this try/catch
+            return null;
+        }
+    }
+
     /**
      * Put instance to ctx with few id's.
      * Id it's object class and all implemented interfaces that extend ValuesProducer interface.
      */
-    private static void putInstanceToCtx(Object instance, Map ctx) {
+    private void putInstanceToCtx(Object instance, Map ctx) {
         Class<?> clazz = instance.getClass();
         ctx.put(clazz, instance);
 
@@ -87,25 +113,34 @@ public class ProducersContextBuilder {
         }
     }
 
-    private static void passProducerResultToField(Object instance, Field field, Map producersCtx) throws Exception{
+    private void passProducerResultToField(Object instance, Field field, Map producersCtx){
         ValuesProducerResult    annotation = field.getAnnotation(ValuesProducerResult.class);
         Class<ValuesProducer>   producerClass = (Class<ValuesProducer>) annotation.producer();
         String                  producerResultName = annotation.resultName();
-        boolean                 required = annotation.required();
+        boolean                 isResultRequired = annotation.required();
         ValuesProducer          producerInstance = (ValuesProducer) producersCtx.get(producerClass);
         Object                  producerResult = getProducerResult(producerInstance, producerResultName);
 
-        if (producerResult == null && required) {
+        if (producerInstance == null && isResultRequired) {
             throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
-                    "' unable to find '" + producerClass.getSimpleName() + "' in context - ");
+                    "' unable to find '" + producerClass.getSimpleName() + "' in context.");
         }
-        if (producerResult != null) {
-            field.setAccessible(true);
+        if (producerResult == null) {
+            if (isResultRequired) {
+                throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
+                        "' unable to get result from '" + producerClass.getSimpleName() + "' instance.");
+            } else return;
+        }
+
+        field.setAccessible(true);
+        try {
             field.set(instance, producerResult);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();    // todo: remove this try/catch
         }
     }
 
-    private static Object getProducerResult(ValuesProducer producerInstance, String producerResultName) {
+    private Object getProducerResult(ValuesProducer producerInstance, String producerResultName) {
         return producerInstance != null && producerInstance.getResult() != null ? producerInstance.getResult().get(producerResultName) : null;
     }
 
