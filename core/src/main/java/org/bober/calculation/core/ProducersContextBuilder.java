@@ -30,6 +30,7 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
+ *  todo: need to cache something in the name of performance
  */
 public class ProducersContextBuilder {
     private ApplicationContext springApplicationContext;
@@ -44,38 +45,38 @@ public class ProducersContextBuilder {
     public <T> T buildDto(Class<T> dtoClazz) {
         HashMap<Object, Object> calculationCtx = new HashMap<>();
 
-        instantiateProducersFromDtoClassAnnotation(dtoClazz, calculationCtx);
-        instantiateDtoAndProducersRecursivelyAndWireResults(dtoClazz, calculationCtx);
+        instantiateProducersFromClassAnnotations(dtoClazz, calculationCtx);
+        instantiateClassesRecursivelyAndWireResults(dtoClazz, calculationCtx);
 
         T dto = calculationCtx.containsKey(dtoClazz) ? (T) calculationCtx.get(dtoClazz) : null;
 
         return dto;
     }
 
-    private void instantiateProducersFromDtoClassAnnotation(Class<?> dtoClazz, Map ctx) {
+    private void instantiateProducersFromClassAnnotations(Class<?> dtoClazz, Map ctx) {
         List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(dtoClazz);
         for (Class<?> clazz : relatedClasses) {
             if (clazz.isAnnotationPresent(PrepareValuesProducer.class)) {
                 Class<? extends ValuesProducer>[] onClassProducers = clazz.getAnnotation(PrepareValuesProducer.class).value();
                 for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
-                    instantiateDtoAndProducersRecursivelyAndWireResults(producerClass, ctx);
+                    instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
                 }
             }
         }
     }
 
-    private void instantiateDtoAndProducersRecursivelyAndWireResults(Class clazz, Map ctx){
+    private void instantiateClassesRecursivelyAndWireResults(Class clazz, Map ctx){
         if (ctx.containsKey(clazz)) {
             return;
         }
 
         Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
-        List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.classFieldsWithRespectToParents(clazz);
+        List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.fetchClassFields(clazz);
         for (Field field : classFieldsWithRespectToParents) {
             if (field.isAnnotationPresent(ValuesProducerResult.class)) {
                 Class<? extends ValuesProducer> producerClass = field.getAnnotation(ValuesProducerResult.class).producer();
 
-                instantiateDtoAndProducersRecursivelyAndWireResults(producerClass, ctx);
+                instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
 
                 passProducerResultToField(instance, field, ctx);
             }

@@ -23,14 +23,14 @@ public class ContextBuilderUtil {
         return chain;
     }
 
-    public static List<Field> classFieldsWithRespectToParents(Class clazz) {
-        return classFieldsWithRespectToParents(clazz, new ArrayList<>());
+    public static List<Field> fetchClassFields(Class clazz) {
+        return fetchClassFields(clazz, new ArrayList<>());
     }
 
-    private static List<Field> classFieldsWithRespectToParents(Class clazz, List<Field> fields) {
+    private static List<Field> fetchClassFields(Class clazz, List<Field> fields) {
         Class<?> superclass = clazz.getSuperclass();
         if (!superclass.equals(Object.class)) {
-            classFieldsWithRespectToParents(superclass, fields);
+            fetchClassFields(superclass, fields);
         }
         Field[] myfields = clazz.getDeclaredFields();
         fields.addAll(Arrays.asList(myfields));
