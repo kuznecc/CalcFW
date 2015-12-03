@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.bober.calculation.core.SpELProcessor.evaluateSpelExpression;
+import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
+
 /**
  *  Process Class {
  *      1. On class annotation 'PrepareValuesProducer' {
@@ -24,9 +27,9 @@ import java.util.Map;
  *          - prepare ProducerResults and pass it to field
  *          }
  *      5. put instance to ctx
+ *      6. before passing producer result to field we check is it need to process value
+ *          with SpEL expression from ValuesProducerResult annotation
  *  }
- *  todo: separate spring depended logic for independent usage
- *  todo: make field annotation that can process result of related producer via SpEL
  */
 public class ProducersContextBuilder {
     private ApplicationContext springApplicationContext;
@@ -117,9 +120,11 @@ public class ProducersContextBuilder {
             } else return;
         }
 
+        Object fieldValue = isItSpelOnFieldDetected(field) ? evaluateSpelExpression(field, producersCtx) : producerResult;
+
         field.setAccessible(true);
         try {
-            field.set(instance, producerResult);
+            field.set(instance, fieldValue);
         } catch (IllegalAccessException e) {
             e.printStackTrace();    // todo: remove this try/catch
         }

@@ -14,7 +14,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ValuesProducerResult {
+    String NO_EXPRESSION = "noExpression";
+    String NO_EXP_ALIAS = "noExpressionAlias";
+
     Class<? extends ValuesProducer> producer();
     String resultName() default ValuesProducer.RESULT;
     boolean required() default true;
+    String exp() default NO_EXPRESSION;
+    String expAlias() default NO_EXP_ALIAS;
 }
