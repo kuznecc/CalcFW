@@ -1,7 +1,6 @@
 package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.ValuesProducerResult;
-import org.bober.calculation.core.interfaces.CalculationFlow;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +29,7 @@ public class ProducersWithSpringDependencies {
     @Autowired
     private ApplicationContext appCtx;
 
-    private CalculationFlow flow = new CalculationFlowImpl();
+    private CalculationFlow flow = new CalculationFlow();
 
     @Test
     public void test_ComplexProducer() throws Exception {

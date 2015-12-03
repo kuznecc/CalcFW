@@ -2,7 +2,6 @@ package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.PrepareValuesProducer;
 import org.bober.calculation.core.annotation.ValuesProducerResult;
-import org.bober.calculation.core.interfaces.CalculationFlow;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 import org.junit.Test;
 
@@ -17,7 +16,7 @@ public class InheritanceDto {
 
     public static int index = 1;
 
-    private CalculationFlow flow = new CalculationFlowImpl();
+    private CalculationFlow flow = new CalculationFlow();
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {
