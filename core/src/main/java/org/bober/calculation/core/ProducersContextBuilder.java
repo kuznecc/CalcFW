@@ -3,11 +3,11 @@ package org.bober.calculation.core;
 import org.bober.calculation.core.annotation.PrepareValuesProducer;
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,8 +25,6 @@ import java.util.Map;
  *          }
  *      5. put instance to ctx
  *  }
- *  todo: cover dto class inheritance
- *  todo: covet producer class inheritance
  *  todo: separate spring depended logic for independent usage
  *  todo: make field annotation that can process result of related producer via SpEL
  */
@@ -51,11 +49,14 @@ public class ProducersContextBuilder {
         return dto;
     }
 
-    private void instantiateProducersFromDtoClassAnnotation(Class<?> clazz, Map ctx) {
-        if (clazz.isAnnotationPresent(PrepareValuesProducer.class)) {
-            Class<? extends ValuesProducer>[] onClassProducers = clazz.getAnnotation(PrepareValuesProducer.class).value();
-            for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
-                instantiateDtoAndProducersRecursivelyAndWireResults(producerClass, ctx);
+    private void instantiateProducersFromDtoClassAnnotation(Class<?> dtoClazz, Map ctx) {
+        List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(dtoClazz);
+        for (Class<?> clazz : relatedClasses) {
+            if (clazz.isAnnotationPresent(PrepareValuesProducer.class)) {
+                Class<? extends ValuesProducer>[] onClassProducers = clazz.getAnnotation(PrepareValuesProducer.class).value();
+                for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
+                    instantiateDtoAndProducersRecursivelyAndWireResults(producerClass, ctx);
+                }
             }
         }
     }
@@ -65,9 +66,9 @@ public class ProducersContextBuilder {
             return;
         }
 
-        Object instance = newInstance(clazz);
-
-        for (Field field : clazz.getDeclaredFields()) {
+        Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
+        List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.classFieldsWithRespectToParents(clazz);
+        for (Field field : classFieldsWithRespectToParents) {
             if (field.isAnnotationPresent(ValuesProducerResult.class)) {
                 Class<? extends ValuesProducer> producerClass = field.getAnnotation(ValuesProducerResult.class).producer();
 
@@ -78,22 +79,6 @@ public class ProducersContextBuilder {
         }
 
         putInstanceToCtx(instance, ctx);
-    }
-
-    private Object newInstance(Class clazz) {
-        if (springApplicationContext != null) {
-            AutowireCapableBeanFactory beanFactory = springApplicationContext.getAutowireCapableBeanFactory();
-            Object bean = beanFactory.createBean(clazz);
-            beanFactory.autowireBean(bean);
-            return bean;
-        }
-
-        try {
-            return clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace(); // todo: remove this try/catch
-            return null;
-        }
     }
 
     /**

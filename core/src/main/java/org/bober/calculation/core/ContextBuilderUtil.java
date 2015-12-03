@@ -1,0 +1,56 @@
+package org.bober.calculation.core;
+
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ContextBuilderUtil {
+
+    public static List<Class<?>> buildReversedClassInherentChain(Class<?> clazz) {
+        return buildReversedClassInherentChain(clazz, new ArrayList<>());
+    }
+
+    private static List<Class<?>> buildReversedClassInherentChain(Class<?> clazz, List<Class<?>> chain) {
+        Class<?> superclass = clazz.getSuperclass();
+        if (!superclass.equals(Object.class)) {
+            buildReversedClassInherentChain(superclass, chain);
+        }
+        chain.add(clazz);
+        return chain;
+    }
+
+    public static List<Field> classFieldsWithRespectToParents(Class clazz) {
+        return classFieldsWithRespectToParents(clazz, new ArrayList<>());
+    }
+
+    private static List<Field> classFieldsWithRespectToParents(Class clazz, List<Field> fields) {
+        Class<?> superclass = clazz.getSuperclass();
+        if (!superclass.equals(Object.class)) {
+            classFieldsWithRespectToParents(superclass, fields);
+        }
+        Field[] myfields = clazz.getDeclaredFields();
+        fields.addAll(Arrays.asList(myfields));
+        return fields;
+    }
+
+    public static Object makeNewInstance(Class clazz, ApplicationContext springApplicationContext) {
+        if (springApplicationContext != null) {
+            AutowireCapableBeanFactory beanFactory = springApplicationContext.getAutowireCapableBeanFactory();
+            Object bean = beanFactory.createBean(clazz);
+            beanFactory.autowireBean(bean);
+            return bean;
+        }
+
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace(); // todo: remove this try/catch
+            return null;
+        }
+    }
+
+}
