@@ -10,9 +10,16 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>core</module>
-        <module>usage</module>
-        <module>performance</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>performance</id>
+            <modules>
+                <module>performance</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
