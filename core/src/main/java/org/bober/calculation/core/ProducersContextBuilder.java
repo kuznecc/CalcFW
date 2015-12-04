@@ -30,6 +30,7 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
+ *  todo: need to cache parsed SpEL expressions
  *  todo: need to cache something in the name of performance
  */
 public class ProducersContextBuilder {

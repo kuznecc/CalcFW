@@ -11,6 +11,7 @@
     <modules>
         <module>core</module>
         <module>usage</module>
+        <module>performance</module>
     </modules>
 
     <dependencies>
