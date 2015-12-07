@@ -33,7 +33,7 @@ public class ProducersWithSpringDependencies {
 
     @Test
     public void test_ComplexProducer() throws Exception {
-        TestDto dto = flow.produceDto(TestDto.class, appCtx);
+        TestDto dto = flow.produceDto(TestDto.class, appCtx, null);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, is(TEST_VALUE));
