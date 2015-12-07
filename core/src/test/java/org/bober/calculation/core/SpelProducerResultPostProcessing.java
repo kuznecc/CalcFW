@@ -4,17 +4,15 @@ import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import static java.util.Collections.singletonMap;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 public class SpELProducerResultPostProcessing {
     public static final String TEST_VALUE = "testValue";
-
+    public static final String NULL_RESULT = "null";
     private CalculationFlow flow = new CalculationFlow();
 
     @Test
@@ -25,6 +23,7 @@ public class SpELProducerResultPostProcessing {
         assertThat(dto.rawResult, is(TEST_VALUE));
         assertThat(dto.upperCaseResult, equalTo(TEST_VALUE.toUpperCase()));
         assertThat(dto.concatenatedResult, equalTo(TEST_VALUE + TEST_VALUE));
+        assertThat(dto.nullResult, nullValue());
     }
 
     public static class Dto {
@@ -34,12 +33,17 @@ public class SpELProducerResultPostProcessing {
         public String upperCaseResult;
         @ValuesProducerResult(producer = Producer.class, exp = "#s + #s", expAlias = "s")
         public String concatenatedResult;
+        @ValuesProducerResult(producer = Producer.class, resultName = NULL_RESULT, exp = "toString()", required = false)
+        public String nullResult;
     }
 
     public static class Producer implements ValuesProducer {
         @Override
         public Map<String, Object> getResult() {
-            return singletonMap(RESULT, (Object) TEST_VALUE);
+            HashMap<String, Object> result = new HashMap<>();
+            result.put(RESULT, TEST_VALUE);
+            result.put(NULL_RESULT, null);
+            return result;
         }
     }
 

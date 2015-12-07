@@ -9,8 +9,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static java.util.Collections.singletonMap;
-
 
 public class SpELProcessor {
 
@@ -31,20 +29,23 @@ public class SpELProcessor {
         ValuesProducer producer = (ValuesProducer) producersCtx.get(vpr.producer());
         Object result = producer.getResult().get(vpr.resultName());
 
+        if (result == null) {
+            return null;
+        }
+
         return vpr.expAlias().equals(ValuesProducerResult.NO_EXP_ALIAS)
                 ? evaluateSpelExpression(result, vpr.exp())
-                : evaluateSpelExpression(singletonMap(vpr.expAlias(), result), vpr.exp());
+                : evaluateSpelExpression(vpr.expAlias(), result, vpr.exp());
     }
 
     public static Object evaluateSpelExpression(Object obj, String expression) {
         return parser.parseExpression(expression).getValue(obj);
     }
 
-    public static Object evaluateSpelExpression(Map<String, Object> objMap, String expression) {
+    public static Object evaluateSpelExpression(String alias, Object object, String expression) {
         StandardEvaluationContext spelCtx = new StandardEvaluationContext();
-        for (String alias : objMap.keySet()) {
-            spelCtx.setVariable(alias, objMap.get(alias));
-        }
+        spelCtx.setVariable(alias, object);
+
         return parser.parseExpression(expression).getValue(spelCtx);
     }
 }
