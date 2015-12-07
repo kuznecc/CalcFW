@@ -9,6 +9,8 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static java.util.Collections.singletonMap;
+
 
 public class SpELProcessor {
 
