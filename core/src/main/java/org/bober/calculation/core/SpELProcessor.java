@@ -2,19 +2,21 @@ package org.bober.calculation.core;
 
 import org.bober.calculation.core.annotation.ValuesProducerResult;
 import org.bober.calculation.core.interfaces.ValuesProducer;
+import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
-
-import static java.util.Collections.singletonMap;
 
 
 public class SpELProcessor {
 
     private static ExpressionParser parser = new SpelExpressionParser();
+
+    private static Map<String, Expression> cachedExpressions = new HashMap<>();
 
     public static boolean isItSpelOnFieldDetected(Field field) {
         ValuesProducerResult vpr = field.getAnnotation(ValuesProducerResult.class);
@@ -41,13 +43,20 @@ public class SpELProcessor {
     }
 
     public static Object evaluateSpelExpression(Object obj, String expression) {
-        return parser.parseExpression(expression).getValue(obj);
+        return getExpression(expression).getValue(obj);
     }
 
     public static Object evaluateSpelExpression(String alias, Object object, String expression) {
         StandardEvaluationContext spelCtx = new StandardEvaluationContext();
         spelCtx.setVariable(alias, object);
 
-        return parser.parseExpression(expression).getValue(spelCtx);
+        return getExpression(expression).getValue(spelCtx);
+    }
+
+    private static Expression getExpression(String expression) {
+        if (!cachedExpressions.containsKey(expression)) {
+            cachedExpressions.put(expression, parser.parseExpression(expression));
+        }
+        return cachedExpressions.get(expression);
     }
 }

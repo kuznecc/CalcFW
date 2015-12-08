@@ -30,13 +30,8 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
- *  todo: change api of calculate method so it returns Object/Map instead void. Invocation of setResult(..) will appear under the hood.
- *  todo: ?autowire ValuesProducerResult to field by field type for cases when producer produce few results with different types
  *  todo: ?save producers single results in context without singletonMap wrappers
  *  todo: move here from usage-point AbstractProducer class
- *  todo: make performance test of SpEL expressions execution
- *  todo: need to cache parsed SpEL expressions
- *  todo: need to cache something in the name of performance
  */
 public class ProducersContextBuilder {
     private ApplicationContext springApplicationContext;
