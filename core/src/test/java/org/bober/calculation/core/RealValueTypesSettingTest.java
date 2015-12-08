@@ -32,6 +32,7 @@ public class RealValueTypesSettingTest {
         assertThat(dto.longResult, is(TEST_LONG));
         assertThat(dto.localDateResult, is(TEST_LOCAL_DATE));
         assertThat(dto.unnecessaryValue, nullValue());
+        assertThat(dto.nullValue, nullValue());
     }
 
 
@@ -47,6 +48,8 @@ public class RealValueTypesSettingTest {
         public LocalDate localDateResult;
         @ValuesProducerResult(producer = Producer.class, resultName = Producer.UNNECESSARY, required = false)
         public Object unnecessaryValue;
+        @ValuesProducerResult(producer = Producer.class, resultName = Producer.NULL_VALUE)
+        public String nullValue;
     }
 
 
@@ -56,6 +59,7 @@ public class RealValueTypesSettingTest {
         public static final String LONG = "long";
         public static final String LOCAL_DATE = "localDate";
         public static final String UNNECESSARY = "unnecessary";
+        public static final String NULL_VALUE = "nullValue";
 
         @Override
         public Map<String, Object> getResult() {
@@ -64,6 +68,7 @@ public class RealValueTypesSettingTest {
             result.put(INTEGER, TEST_INTEGER);
             result.put(LONG, TEST_LONG);
             result.put(LOCAL_DATE, TEST_LOCAL_DATE);
+            result.put(NULL_VALUE, null);
             return result;
         }
     }
