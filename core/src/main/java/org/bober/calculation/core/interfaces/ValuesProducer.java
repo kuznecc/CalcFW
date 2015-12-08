@@ -9,7 +9,7 @@ public interface ValuesProducer {
     String RESULT = "result";
 
     default void produce() { } /* todo : remove default method implementation */
-    default boolean isItCalculated() { return false;} /* todo : remove default method implementation */
+
     Map<String, Object> getResult();
 
 }
