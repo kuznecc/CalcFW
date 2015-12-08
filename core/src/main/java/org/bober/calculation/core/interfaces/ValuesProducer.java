@@ -8,8 +8,6 @@ import java.util.Map;
 public interface ValuesProducer {
     String RESULT = "result";
 
-    default void produce() { } /* todo : remove default method implementation */
-
     Map<String, Object> getResult();
 
 }
