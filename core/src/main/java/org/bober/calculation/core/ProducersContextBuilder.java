@@ -30,8 +30,11 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
+ *  todo: !check do we have some producer result by additional checking keySet.contain(_). Because sometimes value should be null after calculation.
+ *  todo: rename method calculate() to produce()
  *  todo: change api of calculate method so it returns Object/Map instead void. Invocation of setResult(..) will appear under the hood.
- *  todo: save producers single results in context without singletonMap wrappers
+ *  todo: ?autowire ValuesProducerResult to field by field type for cases when producer produce few results with different types
+ *  todo: ?save producers single results in context without singletonMap wrappers
  *  todo: move here from usage-point AbstractProducer class
  *  todo: make performance test of SpEL expressions execution
  *  todo: need to cache parsed SpEL expressions
@@ -113,20 +116,20 @@ public class ProducersContextBuilder {
         String                  producerResultName = annotation.resultName();
         boolean                 isResultRequired = annotation.required();
         ValuesProducer          producerInstance = (ValuesProducer) producersCtx.get(producerClass);
-        Object                  producerResult = getProducerResult(producerInstance, producerResultName);
 
         if (producerInstance == null && isResultRequired) {
             throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
                     "' unable to find '" + producerClass.getSimpleName() + "' in context.");
         }
-        if (producerResult == null) {
+        if (!producerInstance.getResult().containsKey(producerResultName)) {
             if (isResultRequired) {
                 throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
                         "' unable to get result from '" + producerClass.getSimpleName() + "' instance.");
             } else return;
         }
 
-        Object fieldValue = isItSpelOnFieldDetected(field) ? evaluateSpelExpression(field, producersCtx) : producerResult;
+        Object fieldValue = isItSpelOnFieldDetected(field) ?
+                evaluateSpelExpression(field, producersCtx) : getProducerResult(producerInstance, producerResultName);
 
         field.setAccessible(true);
         try {
