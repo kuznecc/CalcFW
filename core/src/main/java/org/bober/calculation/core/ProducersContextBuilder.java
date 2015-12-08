@@ -30,8 +30,6 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
- *  todo: ?save producers single results in context without singletonMap wrappers
- *  todo: move here from usage-point AbstractProducer class
  */
 public class ProducersContextBuilder {
     private ApplicationContext springApplicationContext;
