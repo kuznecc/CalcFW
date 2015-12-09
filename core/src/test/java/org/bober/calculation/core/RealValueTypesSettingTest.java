@@ -20,7 +20,7 @@ public class RealValueTypesSettingTest {
     public static final Long TEST_LONG = 42222L;
     public static final LocalDate TEST_LOCAL_DATE = LocalDate.of(1999,9,9);
 
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_PassingRawValuesFromProducersToFields() throws Exception {

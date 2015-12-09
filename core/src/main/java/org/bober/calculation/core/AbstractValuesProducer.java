@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Map;
 
 public abstract class AbstractValuesProducer implements ValuesProducer {
+    private static final Map<String, Object> NULL_SINGLE_RESULT = Collections.singletonMap(RESULT, null);
+
     private Map<String, Object> result;
 
     protected abstract Map<String, Object> produce();
@@ -23,6 +25,6 @@ public abstract class AbstractValuesProducer implements ValuesProducer {
     }
 
     protected static Map<String, Object> nullResult() {
-        return Collections.singletonMap(RESULT, null);
+        return NULL_SINGLE_RESULT;
     }
 }

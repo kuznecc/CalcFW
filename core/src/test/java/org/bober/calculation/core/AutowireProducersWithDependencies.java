@@ -14,7 +14,7 @@ public class AutowireProducersWithDependencies {
 
     public static final Integer TEST_VALUE = 42;
 
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_ProducerSourceReturnGoodValue() throws Exception {

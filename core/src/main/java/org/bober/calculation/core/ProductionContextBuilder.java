@@ -30,33 +30,35 @@ import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
  *      6. before passing producer result to field we check is it need to process value
  *          with SpEL expression from ValuesProducerResult annotation
  *  }
+ *
+ *  todo: pass to producers certain implementations of producers that declared via interface (something like @Derivied)
  */
-public class ProducersContextBuilder {
+public class ProductionContextBuilder {
     private ApplicationContext springApplicationContext;
 
-    public ProducersContextBuilder() {
+    public ProductionContextBuilder() {
     }
 
-    public ProducersContextBuilder(ApplicationContext springApplicationContext) {
+    public ProductionContextBuilder(ApplicationContext springApplicationContext) {
         this.springApplicationContext = springApplicationContext;
     }
 
-    public <T> T buildDto(Class<T> dtoClazz, Map preparedCalculationCtx) {
-        Map calculationCtx = preparedCalculationCtx != null ? preparedCalculationCtx : new HashMap<>();
+    public <T> T buildClass(Class<T> clazz, Map preparedProducersCtx) {
+        Map producersCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
 
-        instantiateProducersFromClassAnnotations(dtoClazz, calculationCtx);
-        instantiateClassesRecursivelyAndWireResults(dtoClazz, calculationCtx);
+        instantiateProducersFromClassAnnotations(clazz, producersCtx);
+        instantiateClassesRecursivelyAndWireResults(clazz, producersCtx);
 
-        T dto = calculationCtx.containsKey(dtoClazz) ? (T) calculationCtx.get(dtoClazz) : null;
+        T instance = producersCtx.containsKey(clazz) ? (T) producersCtx.get(clazz) : null;
 
-        return dto;
+        return instance;
     }
 
-    private void instantiateProducersFromClassAnnotations(Class<?> dtoClazz, Map ctx) {
-        List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(dtoClazz);
-        for (Class<?> clazz : relatedClasses) {
-            if (clazz.isAnnotationPresent(PrepareValuesProducer.class)) {
-                Class<? extends ValuesProducer>[] onClassProducers = clazz.getAnnotation(PrepareValuesProducer.class).value();
+    private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map ctx) {
+        List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
+        for (Class<?> rClazz : relatedClasses) {
+            if (rClazz.isAnnotationPresent(PrepareValuesProducer.class)) {
+                Class<? extends ValuesProducer>[] onClassProducers = rClazz.getAnnotation(PrepareValuesProducer.class).value();
                 for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
                     instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
                 }

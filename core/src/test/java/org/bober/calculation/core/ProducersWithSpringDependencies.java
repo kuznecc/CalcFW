@@ -29,7 +29,7 @@ public class ProducersWithSpringDependencies {
     @Autowired
     private ApplicationContext appCtx;
 
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_ComplexProducer() throws Exception {

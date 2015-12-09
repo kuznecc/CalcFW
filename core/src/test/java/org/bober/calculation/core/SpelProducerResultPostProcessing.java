@@ -13,7 +13,7 @@ import static org.junit.Assert.assertThat;
 public class SpELProducerResultPostProcessing {
     public static final String TEST_VALUE = "testValue";
     public static final String NULL_RESULT = "null";
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {

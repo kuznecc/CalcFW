@@ -15,7 +15,7 @@ public class AutowireProducers {
 
     public static final Integer TEST_SIMPLE_PRODUCER_RESULT = 42;
 
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_SingleProducer() throws Exception {

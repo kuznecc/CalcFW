@@ -16,7 +16,7 @@ public class InheritanceDto {
 
     public static int index = 1;
 
-    private CalculationFlow flow = new CalculationFlow();
+    private ProductionFlow flow = new ProductionFlow();
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {
