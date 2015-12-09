@@ -42,3 +42,4 @@
 ###Examples:
 
 [Demonstration class](org.bober.calculation.core.Demonstration.java)
+https://github.com/kuznecc/GranularCalculationFramework/blob/master/core/src/test/java/org/bober/calculation/core/Demonstration.java
