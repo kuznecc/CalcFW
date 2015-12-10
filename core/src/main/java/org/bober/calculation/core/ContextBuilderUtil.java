@@ -48,8 +48,8 @@ public class ContextBuilderUtil {
         try {
             return clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace(); // todo: remove this try/catch
-            return null;
+            String msg = String.format("Can't create na instance of %s.", clazz.getName());
+            throw new RuntimeException(msg, e);
         }
     }
 

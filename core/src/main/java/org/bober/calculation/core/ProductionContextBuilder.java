@@ -10,29 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.emptyMap;
 import static org.bober.calculation.core.SpELProcessor.evaluateSpelExpression;
 import static org.bober.calculation.core.SpELProcessor.isItSpelOnFieldDetected;
 
-/**
- *  Process Class {
- *      1. On class annotation 'PrepareValuesProducer' {
- *          - instantiate all listed producers for future usage and put they to ctx.
- *          }
- *      2. Instantiate specified producer
- *      3. @Autowire beans from Spring context via spring annotations
- *      4. Iterate fields for annotation 'ValuesProducerResult' {
- *          - if ctx doesn't contain producer from annotation :
- *                      execute recursively p2-5 for ValuesProducer that mentioned in annotation.
- *          - get needed producer from ctx.
- *          - prepare ProducerResults and pass it to field
- *          }
- *      5. put instance to ctx
- *      6. before passing producer result to field we check is it need to process value
- *          with SpEL expression from ValuesProducerResult annotation
- *  }
- *
- *  todo: pass to producers certain implementations of producers that declared via interface (something like @Derivied)
- */
+//  todo: make clear exceptions for whole producing process
+//  todo: do we need to process @PrepareValuesProducer on @ValuesProducerResult
 public class ProductionContextBuilder {
     private ApplicationContext springApplicationContext;
 
@@ -43,8 +26,8 @@ public class ProductionContextBuilder {
         this.springApplicationContext = springApplicationContext;
     }
 
-    public <T> T buildClass(Class<T> clazz, Map preparedProducersCtx) {
-        Map producersCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
+    public <T> T buildClass(Class<T> clazz, Map<Class, Object> preparedProducersCtx) {
+        Map<Class, Object> producersCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
 
         instantiateProducersFromClassAnnotations(clazz, producersCtx);
         instantiateClassesRecursivelyAndWireResults(clazz, producersCtx);
@@ -54,7 +37,7 @@ public class ProductionContextBuilder {
         return instance;
     }
 
-    private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map ctx) {
+    private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map<Class, Object> ctx) {
         List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
         for (Class<?> rClazz : relatedClasses) {
             if (rClazz.isAnnotationPresent(PrepareValuesProducer.class)) {
@@ -66,7 +49,7 @@ public class ProductionContextBuilder {
         }
     }
 
-    private void instantiateClassesRecursivelyAndWireResults(Class clazz, Map ctx){
+    private void instantiateClassesRecursivelyAndWireResults(Class clazz, Map<Class, Object> ctx){
         if (ctx.containsKey(clazz)) {
             return;
         }
@@ -90,7 +73,7 @@ public class ProductionContextBuilder {
      * Put instance to ctx with few id's.
      * Id it's object class and all implemented interfaces that extend ValuesProducer interface.
      */
-    private void putInstanceToCtx(Object instance, Map ctx) {
+    private void putInstanceToCtx(Object instance, Map<Class, Object> ctx) {
         Class<?> clazz = instance.getClass();
         ctx.put(clazz, instance);
 
@@ -103,7 +86,7 @@ public class ProductionContextBuilder {
         }
     }
 
-    private void passProducerResultToField(Object instance, Field field, Map producersCtx){
+    private void passProducerResultToField(Object instance, Field field, Map<Class, Object> producersCtx){
         ValuesProducerResult    annotation = field.getAnnotation(ValuesProducerResult.class);
         Class<ValuesProducer>   producerClass = (Class<ValuesProducer>) annotation.producer();
         String                  producerResultName = annotation.resultName();
@@ -111,29 +94,41 @@ public class ProductionContextBuilder {
         ValuesProducer          producerInstance = (ValuesProducer) producersCtx.get(producerClass);
 
         if (producerInstance == null && isResultRequired) {
-            throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
-                    "' unable to find '" + producerClass.getSimpleName() + "' in context.");
-        }
-        if (!producerInstance.getResult().containsKey(producerResultName) && isResultRequired) {
-            if (isResultRequired) {
-                throw new IllegalArgumentException("Due processing instance of '" + instance.getClass().getSimpleName() +
-                        "' unable to get result from '" + producerClass.getSimpleName() + "' instance.");
-            } else return;
+            String msg = String.format("Due processing instance of %s unable to find in context producer %s.",
+                    instance.getClass().getName(), producerClass.getSimpleName());
+            throw new RuntimeException(msg);
         }
 
-        Object fieldValue = isItSpelOnFieldDetected(field) ?
-                evaluateSpelExpression(field, producersCtx) : getProducerResult(producerInstance, producerResultName);
+        Map<String, Object> producerResult = producerInstance != null ? producerInstance.getResult() : emptyMap();
+        if (!producerResult.containsKey(producerResultName) && isResultRequired) {
+            String msg = String.format("Due processing instance of %s unable to get from producer %s result %s.",
+                    instance.getClass().getName(), producerClass.getSimpleName(), producerResultName);
+            throw new RuntimeException(msg);
+        }
 
-        field.setAccessible(true);
+        Object fieldValue;
+
+        if (isItSpelOnFieldDetected(field)) {
+            fieldValue = evaluateSpelExpression(field, producersCtx);
+        } else {
+            fieldValue = getProducerResult(producerInstance, producerResultName);
+        }
+
+        if (!field.isAccessible()) {
+            field.setAccessible(true);
+        }
+
         try {
             field.set(instance, fieldValue);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();    // todo: remove this try/catch
+            String msg = String.format("Can't pass value to field %s.%s. (value:%s)",
+                    instance.getClass().getName(), field.getName(), fieldValue);
+            throw new RuntimeException(msg, e);
         }
     }
 
-    private Object getProducerResult(ValuesProducer producerInstance, String producerResultName) {
-        return producerInstance != null && producerInstance.getResult() != null ? producerInstance.getResult().get(producerResultName) : null;
+    private Object getProducerResult(ValuesProducer producer, String resultName) {
+        return producer != null && producer.getResult() != null ? producer.getResult().get(resultName) : null;
     }
 
 }

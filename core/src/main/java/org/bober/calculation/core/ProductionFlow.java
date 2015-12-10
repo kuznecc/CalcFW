@@ -10,7 +10,7 @@ public class ProductionFlow {
         return produceDto(dtoClass, null, null);
     }
 
-    public <T> T produceDto(Class<T> dtoClass, ApplicationContext appCtx, Map preparedProductionCtx) {
+    public <T> T produceDto(Class<T> dtoClass, ApplicationContext appCtx, Map<Class, Object> preparedProductionCtx) {
         ProductionContextBuilder builder = new ProductionContextBuilder(appCtx);
         T dto = builder.buildClass(dtoClass, preparedProductionCtx);
         return dto;
