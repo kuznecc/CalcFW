@@ -37,7 +37,8 @@ public class ContextBuilderUtil {
         return fields;
     }
 
-    public static Object makeNewInstance(Class clazz, ApplicationContext springApplicationContext) {
+    public static Object makeNewInstance(Class clazz, ApplicationContext springApplicationContext)
+            throws ProductionFlowException {
         if (springApplicationContext != null) {
             AutowireCapableBeanFactory beanFactory = springApplicationContext.getAutowireCapableBeanFactory();
             Object bean = beanFactory.createBean(clazz);
@@ -48,8 +49,8 @@ public class ContextBuilderUtil {
         try {
             return clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            String msg = String.format("Can't create na instance of %s.", clazz.getName());
-            throw new RuntimeException(msg, e);
+            String msg = String.format("Can't create an instance of %s via reflection", clazz.getName());
+            throw new ProductionFlowException(msg, e);
         }
     }
 
