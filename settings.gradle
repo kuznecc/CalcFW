@@ -1,0 +1,4 @@
+rootProject.name = 'granularCalculation'
+
+//include ':performance'
+//project(':performance').projectDir = "$rootDir/performance" as File
