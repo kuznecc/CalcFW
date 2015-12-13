@@ -46,8 +46,8 @@ public class SimpleBenchmark {
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-//    @Warmup(iterations = 4)
-//    @Fork(1)
+    @Warmup(iterations = 4)
+    @Fork(1)
     public Object testMethod() {
         // This is a demo/sample template for building your JMH benchmarks. Edit as needed.
         // Put your benchmark code here.
