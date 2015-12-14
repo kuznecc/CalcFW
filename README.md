@@ -41,5 +41,4 @@
 
 ###Examples:
 
-[Demonstration class](org.bober.calculation.Demonstration.java)
-https://github.com/kuznecc/GranularCalculationFramework/blob/master/src/test/java/org/bober/calculation/Demonstration.java
+[Demonstration class](https://github.com/kuznecc/GranularCalculationFramework/blob/master/src/test/java/org/bober/calculation/Demonstration.java)
