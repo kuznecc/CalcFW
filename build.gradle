@@ -7,21 +7,17 @@ version = '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-ext.versionSpring = "4.2.1.RELEASE"
-
-dependencies {
-    compile "org.springframework:spring-beans:$versionSpring"
-    compile "org.springframework:spring-context:$versionSpring"
-    compile "org.springframework:spring-expression:$versionSpring"
-    testCompile "junit:junit:4.12"
-    testCompile "org.springframework:spring-test:$versionSpring"
+repositories {
+    mavenLocal()
+    mavenCentral()
 }
 
+ext.springVersion = "4.2.1.RELEASE"
 
-allprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
+dependencies {
+    compile "org.springframework:spring-beans:$springVersion"
+    compile "org.springframework:spring-context:$springVersion"
+    compile "org.springframework:spring-expression:$springVersion"
+    testCompile "junit:junit:4.12"
+    testCompile "org.springframework:spring-test:$springVersion"
 }
