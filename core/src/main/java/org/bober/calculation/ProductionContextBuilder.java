@@ -13,11 +13,15 @@ import static java.util.Collections.emptyMap;
 import static org.bober.calculation.SpELProcessor.evaluateSpelExpression;
 import static org.bober.calculation.SpELProcessor.isItSpelOnFieldDetected;
 
-//  todo: do we need to process @PrepareValuesProducer on @ValuesProducerResult
+// todo: invent multi-tread approach for calculating producers
+// todo: do we need to process @PrepareValuesProducer on @ValuesProducerResult
+// todo: add caching of dto and producers structure to eliminate redundant on fields iteration
+// todo: ? add loggers ?
 public class ProductionContextBuilder {
     private ApplicationContext springApplicationContext;
 
     public ProductionContextBuilder() {
+
     }
 
     public ProductionContextBuilder(ApplicationContext springApplicationContext) {

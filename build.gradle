@@ -1,23 +1,14 @@
-apply plugin: 'java'
-apply plugin: 'maven'
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
 
-group = 'org.bober'
-version = '1.0-SNAPSHOT'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
-ext.springVersion = "4.2.1.RELEASE"
-
-dependencies {
-    compile "org.springframework:spring-beans:$springVersion"
-    compile "org.springframework:spring-context:$springVersion"
-    compile "org.springframework:spring-expression:$springVersion"
-    testCompile "junit:junit:4.12"
-    testCompile "org.springframework:spring-test:$springVersion"
+    wrapper.enabled = false
 }
