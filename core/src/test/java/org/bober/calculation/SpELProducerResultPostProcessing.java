@@ -12,11 +12,11 @@ import static org.junit.Assert.assertThat;
 public class SpELProducerResultPostProcessing {
     public static final String TEST_VALUE = "testValue";
     public static final String NULL_RESULT = "null";
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {
-        Dto dto = flow.produceDto(Dto.class);
+        Dto dto = flow.produceClass(Dto.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.rawResult, is(TEST_VALUE));

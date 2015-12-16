@@ -13,12 +13,12 @@ public class AutowireProducersWithDependencies {
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_ProducerSourceReturnGoodValue() throws Exception {
         TestValueSource.VALUE = TEST_VALUE;
-        TestDto_ProducerWithDepended dto = flow.produceDto(TestDto_ProducerWithDepended.class);
+        TestDto_ProducerWithDepended dto = flow.produceClass(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, notNullValue());
@@ -28,7 +28,7 @@ public class AutowireProducersWithDependencies {
     @Test
     public void test_ProducerSourceReturnNull() throws Exception {
         TestValueSource.VALUE = null;
-        TestDto_ProducerWithDepended dto = flow.produceDto(TestDto_ProducerWithDepended.class);
+        TestDto_ProducerWithDepended dto = flow.produceClass(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, nullValue());
@@ -38,7 +38,7 @@ public class AutowireProducersWithDependencies {
     public void test_ProducerCrossDependency() throws Exception {
         // complexP() = p1() + p2(P1)
         TestValueSource.VALUE = TEST_VALUE;
-        TestDto_ProducerCrossDependency dto = flow.produceDto(TestDto_ProducerCrossDependency.class);
+        TestDto_ProducerCrossDependency dto = flow.produceClass(TestDto_ProducerCrossDependency.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, is(TEST_VALUE*2));

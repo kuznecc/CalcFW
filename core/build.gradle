@@ -7,6 +7,7 @@ dependencies {
     compile "org.springframework:spring-beans:$springVersion"
     compile "org.springframework:spring-context:$springVersion"
     compile "org.springframework:spring-expression:$springVersion"
+    compile "com.google.guava:guava:19.0"
     testCompile "junit:junit:4.12"
     testCompile "org.springframework:spring-test:$springVersion"
 }

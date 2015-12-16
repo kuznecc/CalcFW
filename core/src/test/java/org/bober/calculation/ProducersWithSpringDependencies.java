@@ -28,11 +28,11 @@ public class ProducersWithSpringDependencies {
     @Autowired
     private ApplicationContext appCtx;
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_ComplexProducer() throws Exception {
-        TestDto dto = flow.produceDto(TestDto.class, appCtx, null);
+        TestDto dto = flow.produceClass(TestDto.class, appCtx, null);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, is(TEST_VALUE));

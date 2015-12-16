@@ -10,9 +10,9 @@ import java.util.Map;
 public class Demonstration {
 
     public static void main(String[] args) {
-        ProductionFlow flow = new ProductionFlow();
-        GuitaristDto guitarist = flow.produceDto(GuitaristDto.class);
-        DrummerDto drummer = flow.produceDto(DrummerDto.class);
+        ProductionFlow flow = new RecursionProductionFlow();
+        GuitaristDto guitarist = flow.produceClass(GuitaristDto.class);
+        DrummerDto drummer = flow.produceClass(DrummerDto.class);
         System.out.println();
     }
 

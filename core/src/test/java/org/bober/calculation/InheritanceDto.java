@@ -15,11 +15,11 @@ public class InheritanceDto {
 
     public static int index = 1;
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {
-        ChildDto dto = flow.produceDto(ChildDto.class);
+        ChildDto dto = flow.produceClass(ChildDto.class);
 
         assertThat(dto, notNullValue());
 

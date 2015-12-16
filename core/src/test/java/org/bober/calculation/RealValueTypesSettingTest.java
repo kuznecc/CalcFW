@@ -19,11 +19,11 @@ public class RealValueTypesSettingTest {
     public static final Long TEST_LONG = 42222L;
     public static final LocalDate TEST_LOCAL_DATE = LocalDate.of(1999,9,9);
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_PassingRawValuesFromProducersToFields() throws Exception {
-        Dto dto = flow.produceDto(Dto.class);
+        Dto dto = flow.produceClass(Dto.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.stringResult, is(TEST_STRING));

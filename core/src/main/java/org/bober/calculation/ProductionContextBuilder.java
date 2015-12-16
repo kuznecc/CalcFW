@@ -9,11 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.emptyMap;
-import static org.bober.calculation.SpELProcessor.evaluateSpelExpression;
-import static org.bober.calculation.SpELProcessor.isItSpelOnFieldDetected;
-
-// todo: invent multi-tread approach for calculating producers
 // todo: do we need to process @PrepareValuesProducer on @ValuesProducerResult
 // todo: add caching of dto and producers structure to eliminate redundant on fields iteration
 // todo: ? add loggers ?
@@ -44,10 +39,11 @@ public class ProductionContextBuilder {
 
     private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map<Class, Object> ctx)
             throws ProductionFlowException {
-        List<Class<?>> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
-        for (Class<?> rClazz : relatedClasses) {
+        List<Class> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
+        for (Class rClazz : relatedClasses) {
             if (rClazz.isAnnotationPresent(PrepareValuesProducer.class)) {
-                Class<? extends ValuesProducer>[] onClassProducers = rClazz.getAnnotation(PrepareValuesProducer.class).value();
+                Class<? extends ValuesProducer>[] onClassProducers =
+                        ((Class<?>) rClazz).getAnnotation(PrepareValuesProducer.class).value();
                 for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
                     try {
                         instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
@@ -75,7 +71,7 @@ public class ProductionContextBuilder {
 
                     instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
 
-                    passProducerResultToField(instance, field, ctx);
+                    ContextBuilderUtil.passProducerResultToField(instance, field, ctx);
                 }
             }
         } catch (ProductionFlowException e) {
@@ -103,55 +99,5 @@ public class ProductionContextBuilder {
         }
     }
 
-    private void passProducerResultToField(Object instance, Field field, Map<Class, Object> producersCtx)
-            throws ProductionFlowException {
-        ValuesProducerResult    annotation = field.getAnnotation(ValuesProducerResult.class);
-        Class<ValuesProducer>   producerClass = (Class<ValuesProducer>) annotation.producer();
-        String                  producerResultName = annotation.resultName();
-        boolean                 isResultRequired = annotation.required();
-        ValuesProducer          producerInstance = (ValuesProducer) producersCtx.get(producerClass);
-
-        try {
-            if (producerInstance == null && isResultRequired) {
-                String msg = String.format("There are no needed producer in producers context, but it's required. %s",
-                        producerClass.getName());
-                throw new ProductionFlowException(msg);
-            }
-
-            Map<String, Object> producerResult = producerInstance != null ? producerInstance.getResult() : emptyMap();
-            if (!producerResult.containsKey(producerResultName) && isResultRequired) {
-                String msg = String.format("Producer %s haven't result %s that required",
-                        producerClass.getName(), producerResultName);
-                throw new ProductionFlowException(msg);
-            }
-
-            Object fieldValue;
-
-            if (isItSpelOnFieldDetected(field)) {
-                fieldValue = evaluateSpelExpression(field, producersCtx);
-            } else {
-                fieldValue = getProducerResult(producerInstance, producerResultName);
-            }
-
-            if (!field.isAccessible()) {
-                field.setAccessible(true);
-            }
-
-            try {
-                field.set(instance, fieldValue);
-            } catch (IllegalAccessException e) {
-                String msg = String.format("Can't pass value %s", fieldValue!=null?fieldValue:null);
-                throw new ProductionFlowException(msg, e);
-            }
-
-        } catch (ProductionFlowException e) {
-            String msg = String.format("Setting value to field %s", field.getName());
-            throw new ProductionFlowException(msg);
-        }
-    }
-
-    private Object getProducerResult(ValuesProducer producer, String resultName) {
-        return producer != null && producer.getResult() != null ? producer.getResult().get(resultName) : null;
-    }
 
 }

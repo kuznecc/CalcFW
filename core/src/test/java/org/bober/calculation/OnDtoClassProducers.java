@@ -15,11 +15,11 @@ public class OnDtoClassProducers {
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_ComplexProducer() throws Exception {
-        TestDto dto = flow.produceDto(TestDto.class);
+        TestDto dto = flow.produceClass(TestDto.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, is(TEST_VALUE));

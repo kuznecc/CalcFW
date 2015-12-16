@@ -14,11 +14,11 @@ public class AutowireProducers {
 
     public static final Integer TEST_SIMPLE_PRODUCER_RESULT = 42;
 
-    private ProductionFlow flow = new ProductionFlow();
+    private ProductionFlow flow = new RecursionProductionFlow();
 
     @Test
     public void test_SingleProducer() throws Exception {
-        TestDto_OneProducer dto = flow.produceDto(TestDto_OneProducer.class);
+        TestDto_OneProducer dto = flow.produceClass(TestDto_OneProducer.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.producerResult, notNullValue());
@@ -27,7 +27,7 @@ public class AutowireProducers {
 
     @Test
     public void test_TwoEqProducers() throws Exception {
-        TestDto_TwoEqProducers dto = flow.produceDto(TestDto_TwoEqProducers.class);
+        TestDto_TwoEqProducers dto = flow.produceClass(TestDto_TwoEqProducers.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.simpleProducerResult, notNullValue());
@@ -38,7 +38,7 @@ public class AutowireProducers {
 
     @Test
     public void test_TwoDifProducers() throws Exception {
-        TestDto_TwoDifProducers dto = flow.produceDto(TestDto_TwoDifProducers.class);
+        TestDto_TwoDifProducers dto = flow.produceClass(TestDto_TwoDifProducers.class);
 
         assertThat(dto, notNullValue());
         assertThat(dto.simpleProducerResult, notNullValue());
