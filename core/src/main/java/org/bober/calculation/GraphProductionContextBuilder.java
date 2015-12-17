@@ -3,6 +3,7 @@ package org.bober.calculation;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import org.bober.calculation.annotation.PrepareValuesProducer;
 import org.bober.calculation.annotation.ValuesProducerResult;
 
 import java.lang.reflect.Field;
@@ -10,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -22,9 +24,9 @@ public class GraphProductionContextBuilder {
 
     private static boolean useMultiTread = false;
 
+    private Set<Class> producerInterfaceImplementations; // from @PrepareValuesProducers
     //todo: eliminate Guava usave
     private SetMultimap<Class, Class> relations = HashMultimap.create(); // key-parentClass, val-childClass
-    // todo: make it all concurrency safe
     private Set<Class> allRelatedClasses;
     private Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
     private Map<Class, ChainedWrapper> wrappers = new HashMap<>();
@@ -43,6 +45,11 @@ public class GraphProductionContextBuilder {
 
         if (useMultiTread) {
             executorService.shutdown();
+            try {
+                executorService.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return (T) instancesCtx.get(clazz);
@@ -91,24 +98,51 @@ public class GraphProductionContextBuilder {
 
     private void cachedRelations(Class clazz) {
         if (!cachedRelations.containsKey(clazz)) {
+            processOnClassAnnotation(clazz);
             initRelations(clazz);
             cachedRelations.put(clazz, relations);
         }
         relations = cachedRelations.get(clazz);
     }
 
+    private void processOnClassAnnotation(Class<?> clazz) {
+        producerInterfaceImplementations = new HashSet<>();
+
+        List<Class> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
+        for (Class rClazz : relatedClasses) {
+            if (rClazz.isAnnotationPresent(PrepareValuesProducer.class)) {
+                producerInterfaceImplementations.addAll(Arrays.asList(
+                        ((Class<?>) rClazz).getAnnotation(PrepareValuesProducer.class).value()));
+            }
+        }
+    }
+
     private void initRelations(Class clazz) {
+        if (clazz.isInterface()) {
+            clazz = matchInterfaceToClass(clazz);
+        }
+
         List<Field> classFields = ContextBuilderUtil.fetchClassFields(clazz);
 
         for (Field field : classFields) {
             if (field.isAnnotationPresent(ValuesProducerResult.class)) {
                 Class<? extends ValuesProducer> producerClass = field.getAnnotation(ValuesProducerResult.class).producer();
+                if (producerClass.isInterface()) {
+                    producerClass = matchInterfaceToClass(producerClass);
+                }
 
                 initRelations(producerClass);
-
                 relations.put(clazz, producerClass);
             }
         }
+    }
+
+    private Class matchInterfaceToClass(final Class interf) {
+        return producerInterfaceImplementations.stream()
+                .filter(c -> interf.isAssignableFrom(c))
+                .findFirst()
+                .orElseThrow(() ->
+                        new RuntimeException("Can't found implementation class for interface " + interf.getName()));
     }
 
     static class ChainedWrapper {
@@ -146,7 +180,8 @@ public class GraphProductionContextBuilder {
                 try {
                     Object instance = ContextBuilderUtil.makeNewInstance(clazz, null);
                     passProducerResultsToInstance(clazz, instance);
-                    instancesCtx.put(clazz, instance);
+                    ContextBuilderUtil.putInstanceToCtx(instance, instancesCtx);
+//                    instancesCtx.put(clazz, instance);
                 } catch (ProductionFlowException e) {
                     throw new RuntimeException("can't make instance for " + clazz.getSimpleName(), e);
                 }

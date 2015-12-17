@@ -79,25 +79,10 @@ public class ProductionContextBuilder {
             throw new ProductionFlowException(msg,e);
         }
 
-        putInstanceToCtx(instance, ctx);
+        ContextBuilderUtil.putInstanceToCtx(instance, ctx);
     }
 
-    /**
-     * Put instance to ctx with few id's.
-     * Id it's object class and all implemented interfaces that extend ValuesProducer interface.
-     */
-    private void putInstanceToCtx(Object instance, Map<Class, Object> ctx) {
-        Class<?> clazz = instance.getClass();
-        ctx.put(clazz, instance);
 
-        Class<?>[] interfaces = clazz.getInterfaces();
-
-        for (Class<?> anInterface : interfaces) {
-            if (ValuesProducer.class.isAssignableFrom(anInterface)) {
-                ctx.put(anInterface, instance);
-            }
-        }
-    }
 
 
 }

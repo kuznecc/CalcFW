@@ -67,6 +67,22 @@ public class ContextBuilderUtil {
         }
     }
 
+    /**
+     * Put instance to ctx with few id's.
+     * Id it's object class and all implemented interfaces that extend ValuesProducer interface.
+     */
+    public static void putInstanceToCtx(Object instance, Map<Class, Object> ctx) {
+        Class<?> clazz = instance.getClass();
+        ctx.put(clazz, instance);
+
+        Class<?>[] interfaces = clazz.getInterfaces();
+
+        for (Class<?> anInterface : interfaces) {
+            if (ValuesProducer.class.isAssignableFrom(anInterface)) {
+                ctx.put(anInterface, instance);
+            }
+        }
+    }
     public static void passProducerResultToField(Object instance, Field field, Map<Class, Object> producersCtx)
             throws ProductionFlowException {
         ValuesProducerResult annotation = field.getAnnotation(ValuesProducerResult.class);

@@ -13,17 +13,16 @@ import static org.junit.Assert.assertThat;
 
 public class InheritanceDto extends AbstractProductionFlowTest{
 
-    public static int index;
+    private static final int VALUE = 1;
 
     private ProductionFlow flow;
 
     public InheritanceDto(ProductionFlow flow) {
         this.flow = flow;
-        index = 1;
     }
 
     @Test
-    public void test_SequenceOfProducerInstantiation() throws Exception {
+    public void test_ProducersInheritanceWithInterfaceMatching() throws Exception {
         ChildDto dto = flow.produceClass(ChildDto.class);
 
         assertThat(dto, notNullValue());
@@ -33,10 +32,10 @@ public class InheritanceDto extends AbstractProductionFlowTest{
         assertThat(dto.parentFieldProducer, notNullValue());
         assertThat(dto.childFieldProducer,  notNullValue());
 
-        assertThat(dto.parentClassProducer, is(1));
-        assertThat(dto.childClassProducer,  is(2));
-        assertThat(dto.parentFieldProducer, is(3));
-        assertThat(dto.childFieldProducer,  is(4));
+        assertThat(dto.parentClassProducer, is(VALUE));
+        assertThat(dto.childClassProducer,  is(VALUE));
+        assertThat(dto.parentFieldProducer, is(VALUE));
+        assertThat(dto.childFieldProducer,  is(VALUE));
     }
 
 
@@ -44,7 +43,7 @@ public class InheritanceDto extends AbstractProductionFlowTest{
     public static class ChildDto extends ParentDto{
         @ValuesProducerResult(producer = Producer4.class)
         public Integer childFieldProducer;
-        @ValuesProducerResult(producer = Producer2.class)
+        @ValuesProducerResult(producer = P2Interface.class)
         public Integer childClassProducer;
     }
 
@@ -52,41 +51,44 @@ public class InheritanceDto extends AbstractProductionFlowTest{
     public static class ParentDto {
         @ValuesProducerResult(producer = Producer3.class)
         public Integer parentFieldProducer;
-        @ValuesProducerResult(producer = Producer1.class)
+        @ValuesProducerResult(producer = P1Interface.class)
         public Integer parentClassProducer;
     }
 
 
-    public static class Producer1 extends AbstractProducer {
+    public interface P1Interface extends ValuesProducer { }
+
+    public static class Producer1 implements P1Interface{
         @Override
         public Map<String, Object> getResult() {
-            return singletonMap(RESULT, (Object) val);
+            return singletonMap(RESULT, (Object) VALUE);
         }
     }
 
-    public static class Producer2 extends AbstractProducer {
+    public interface P2Interface extends ValuesProducer { }
+
+    public static class Producer2 implements P2Interface{
         @Override
         public Map<String, Object> getResult() {
-            return singletonMap(RESULT, (Object) val);
+            return singletonMap(RESULT, (Object) VALUE);
         }
     }
 
-    public static class Producer3 extends AbstractProducer {
+    public static class Producer3 implements ValuesProducer {
         @Override
         public Map<String, Object> getResult() {
-            return singletonMap(RESULT, (Object) val);
+            return singletonMap(RESULT, (Object) VALUE);
         }
     }
 
-    public static class Producer4 extends AbstractProducer {
+    public static class Producer4 implements ValuesProducer {
         @Override
         public Map<String, Object> getResult() {
-            return singletonMap(RESULT, (Object) val);
+            return singletonMap(RESULT, (Object) VALUE);
         }
     }
 
     public static abstract class AbstractProducer implements ValuesProducer {
-        protected Integer val = index++;
     }
 
 }
