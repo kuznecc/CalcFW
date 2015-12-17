@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import org.bober.calculation.annotation.PrepareValuesProducer;
 import org.bober.calculation.annotation.ValuesProducerResult;
+import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -31,6 +32,16 @@ public class GraphProductionContextBuilder {
     private Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
     private Map<Class, ChainedWrapper> wrappers = new HashMap<>();
     private Map<Class, Object> instancesCtx = new HashMap<>();
+
+    private ApplicationContext springApplicationContext;
+
+    public GraphProductionContextBuilder() {
+
+    }
+
+    public GraphProductionContextBuilder(ApplicationContext springApplicationContext) {
+        this.springApplicationContext = springApplicationContext;
+    }
 
     public <T> T buildClass(Class<T> clazz) {
         cachedRelations(clazz);
@@ -71,7 +82,8 @@ public class GraphProductionContextBuilder {
 
     private void initWrappers() {
         for (Class clazz : allRelatedClasses) {
-            wrappers.put(clazz, new ChainedWrapper(clazz, wrappers, relations, instancesCtx, relationsCounters));
+            wrappers.put(clazz,
+                    new ChainedWrapper(clazz, wrappers, relations, springApplicationContext, instancesCtx, relationsCounters));
         }
     }
 
@@ -148,6 +160,7 @@ public class GraphProductionContextBuilder {
     static class ChainedWrapper {
         private Class clazz;
         private Map<Class, ChainedWrapper> wrappers;
+        private final ApplicationContext springApplicationContext;
         private final Map<Class, Object> instancesCtx;
         private final AtomicInteger myRelationsCounter;
         private final Set<Class> myResultConsumers;
@@ -155,10 +168,11 @@ public class GraphProductionContextBuilder {
         public ChainedWrapper(Class clazz,
                               Map<Class, ChainedWrapper> wrappers,
                               Multimap<Class, Class> relations,
-                              Map<Class, Object> instancesCtx,
+                              ApplicationContext springApplicationContext, Map<Class, Object> instancesCtx,
                               Map<Class, AtomicInteger> relationsCounters) {
             this.clazz = clazz;
             this.wrappers = wrappers;
+            this.springApplicationContext = springApplicationContext;
             this.instancesCtx = instancesCtx;
             myRelationsCounter = relationsCounters.get(clazz);
             myResultConsumers = relations.keySet().stream()
@@ -178,7 +192,7 @@ public class GraphProductionContextBuilder {
         public void instantiate() {
             if (!instancesCtx.containsKey(clazz)) {
                 try {
-                    Object instance = ContextBuilderUtil.makeNewInstance(clazz, null);
+                    Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
                     passProducerResultsToInstance(clazz, instance);
                     ContextBuilderUtil.putInstanceToCtx(instance, instancesCtx);
 //                    instancesCtx.put(clazz, instance);

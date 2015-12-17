@@ -1,10 +1,7 @@
 
 package org.bober.calculation.performance;
 
-import org.bober.calculation.AbstractValuesProducer;
-import org.bober.calculation.ProductionFlowGraph;
-import org.bober.calculation.ProductionFlow;
-import org.bober.calculation.ProductionFlowRecursion;
+import org.bober.calculation.*;
 import org.bober.calculation.annotation.ValuesProducerResult;
 import org.openjdk.jmh.annotations.*;
 
@@ -52,8 +49,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphMultiThread() {
-        ProductionFlowGraph flow = new ProductionFlowGraph();
-        flow.setUseMultiThreading(true);
+        ProductionFlow flow = new ProductionFlowGraphMultiThread();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }

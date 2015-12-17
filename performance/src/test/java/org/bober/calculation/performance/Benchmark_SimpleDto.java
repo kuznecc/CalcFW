@@ -50,8 +50,7 @@ public class Benchmark_SimpleDto {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphMultiThread() {
-        ProductionFlowGraph flow = new ProductionFlowGraph();
-        flow.setUseMultiThreading(true);
+        ProductionFlow flow = new ProductionFlowGraphMultiThread();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
