@@ -1,73 +1,110 @@
 package org.bober.calculation;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import org.bober.calculation.annotation.ValuesProducerResult;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 // todo: invent multi-tread approach for calculating producers
 // All processed classes should have only one instance
 public class GraphProductionContextBuilder {
+    private static ExecutorService executorService;
+    private static final Map<Class, SetMultimap<Class, Class>> cachedRelations = new HashMap<>();
+    private static final Map<Class, Set<Class>> cachedAllRelatedClasses = new HashMap<>();
+
+    private static boolean useMultiTread = false;
+
     //todo: eliminate Guava usave
-    private Multimap<Class, Class> relations = ArrayListMultimap.create(); // key-parentClass, val-childClass
+    private SetMultimap<Class, Class> relations = HashMultimap.create(); // key-parentClass, val-childClass
     // todo: make it all concurrency safe
-    private Set<Class> allClasses = new HashSet<>();
+    private Set<Class> allRelatedClasses;
     private Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
     private Map<Class, ChainedWrapper> wrappers = new HashMap<>();
     private Map<Class, Object> instancesCtx = new HashMap<>();
 
     public <T> T buildClass(Class<T> clazz) {
-        initClassSetAndRelations(clazz);
+        cachedRelations(clazz);
+        cachedAllRelatedClasses(clazz);
         initRelationCounters();
         initWrappers();
+
+        if (useMultiTread) {
+            executorService = Executors.newFixedThreadPool(10);
+        }
         initiateCalculationChain();
+
+        if (useMultiTread) {
+            executorService.shutdown();
+        }
 
         return (T) instancesCtx.get(clazz);
     }
 
+    public static void setUseMultiThread(boolean doWeUseIt) {
+        useMultiTread = doWeUseIt;
+    }
+
     private void initiateCalculationChain() {
-        // execute all wrappers that have no relations with other
-        for (Class clazz : relationsCounters.keySet()) {
-            if (relationsCounters.get(clazz).get() == 0) {
-                wrappers.get(clazz).instantiate();
-            }
-        }
+        // execute all wrappers that have no relations with other classes
+        relationsCounters.keySet().stream()
+                .filter(c -> relationsCounters.get(c).get() == 0)
+                .forEach(c -> {
+                    wrappers.get(c).instantiate(useMultiTread);
+                });
     }
 
 
     private void initWrappers() {
-        for (Class clazz : allClasses) {
+        for (Class clazz : allRelatedClasses) {
             wrappers.put(clazz, new ChainedWrapper(clazz, wrappers, relations, instancesCtx, relationsCounters));
         }
     }
 
     private void initRelationCounters() {
-        for (Class clazz : allClasses) {
-            if (!relations.containsKey(clazz)) {
-                relationsCounters.put(clazz, new AtomicInteger(0));
-            } else {
-                if (relationsCounters.containsKey(clazz)) {
-                    relationsCounters.get(clazz).incrementAndGet();
-                } else {
-                    relationsCounters.put(clazz, new AtomicInteger(1));
-                }
-            }
+        for (Class clazz : allRelatedClasses) {
+            int counter = relations.containsKey(clazz) ? relations.get(clazz).size() : 0;
+            relationsCounters.put(clazz, new AtomicInteger(counter));
         }
     }
 
-    private void initClassSetAndRelations(Class clazz) {
-        allClasses.add(clazz);
-        List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.fetchClassFields(clazz);
+    private void cachedAllRelatedClasses(Class clazz) {
+        if (!cachedAllRelatedClasses.containsKey(clazz)) {
+            initAllRelatedClasses();
+            cachedAllRelatedClasses.put(clazz, allRelatedClasses);
+        }
+        allRelatedClasses = cachedAllRelatedClasses.get(clazz);
+    }
 
-        for (Field field : classFieldsWithRespectToParents) {
+    private void initAllRelatedClasses() {
+        allRelatedClasses = new HashSet<>();
+        allRelatedClasses.addAll(relations.keySet());
+        allRelatedClasses.addAll(relations.values());
+    }
+
+    private void cachedRelations(Class clazz) {
+        if (!cachedRelations.containsKey(clazz)) {
+            initRelations(clazz);
+            cachedRelations.put(clazz, relations);
+        }
+        relations = cachedRelations.get(clazz);
+    }
+
+    private void initRelations(Class clazz) {
+        List<Field> classFields = ContextBuilderUtil.fetchClassFields(clazz);
+
+        for (Field field : classFields) {
             if (field.isAnnotationPresent(ValuesProducerResult.class)) {
                 Class<? extends ValuesProducer> producerClass = field.getAnnotation(ValuesProducerResult.class).producer();
 
-                initClassSetAndRelations(producerClass);
+                initRelations(producerClass);
 
                 relations.put(clazz, producerClass);
             }
@@ -95,9 +132,17 @@ public class GraphProductionContextBuilder {
                     .collect(Collectors.toSet());
         }
 
+        public void instantiate(boolean useMultiTreads) {
+            if (useMultiTreads) {
+                CompletableFuture.runAsync(this::instantiate, executorService);
+            } else {
+                instantiate();
+            }
+
+        }
+
         public void instantiate() {
             if (!instancesCtx.containsKey(clazz)) {
-
                 try {
                     Object instance = ContextBuilderUtil.makeNewInstance(clazz, null);
                     passProducerResultsToInstance(clazz, instance);
@@ -119,7 +164,7 @@ public class GraphProductionContextBuilder {
                     try {
                         ContextBuilderUtil.passProducerResultToField(instance, field, instancesCtx);
                     } catch (ProductionFlowException e) {
-                        throw new RuntimeException("Saturating of " + clazz.getSimpleName(), e);
+                        throw new RuntimeException("Saturating of " + clazz.getSimpleName() + "|" + e.getMessage(), e);
                     }
 
                 }
@@ -135,7 +180,7 @@ public class GraphProductionContextBuilder {
         public void resolveRelation() {
             int counter = myRelationsCounter.decrementAndGet();
             if (counter == 0) {
-                instantiate();
+                instantiate(useMultiTread);
             }
         }
     }

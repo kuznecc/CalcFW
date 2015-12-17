@@ -11,11 +11,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class OnDtoClassProducers {
+public class OnDtoClassProducers extends AbstractProductionFlowTest{
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
+
+    public OnDtoClassProducers(ProductionFlow flow) {
+        this.flow = flow;
+    }
 
     @Test
     public void test_ComplexProducer() throws Exception {

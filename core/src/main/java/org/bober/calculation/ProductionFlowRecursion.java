@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.Map;
 
-public class RecursionProductionFlow implements ProductionFlow {
+public class ProductionFlowRecursion implements ProductionFlow {
 
     @Override
     public <T> T produceClass(Class<T> dtoClass){

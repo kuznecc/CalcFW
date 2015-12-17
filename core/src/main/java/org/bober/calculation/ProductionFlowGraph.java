@@ -4,9 +4,11 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.Map;
 
-public class GraphProductionFlow implements ProductionFlow {
+public class ProductionFlowGraph implements ProductionFlow {
 
-    private boolean useMultiTreading;
+    public void setUseMultiThreading(boolean useMultiThreading) {
+        GraphProductionContextBuilder.setUseMultiThread(useMultiThreading);
+    }
 
     @Override
     public <T> T produceClass(Class<T> dtoClass){

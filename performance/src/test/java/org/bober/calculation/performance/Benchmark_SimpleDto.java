@@ -18,7 +18,7 @@ public class Benchmark_SimpleDto {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursion() {
-        ProductionFlow flow = new RecursionProductionFlow();
+        ProductionFlow flow = new ProductionFlowRecursion();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -34,15 +34,32 @@ public class Benchmark_SimpleDto {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphSingleThread() {
-        GraphProductionFlow flow = new GraphProductionFlow();
+        ProductionFlowGraph flow = new ProductionFlowGraph();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
-//    Result: 0,010 ±(99.9%) 0,000 ms/op [Average]
-//    Statistics: (min, avg, max) = (0,009, 0,010, 0,011), stdev = 0,000
-//    Confidence interval (99.9%): [0,010, 0,010]
-//    Benchmark                                       Mode  Cnt  Score   Error  Units
-//    GranularCalculationBenchmark.graphSingleThread  avgt   20  0,010 ± 0,000  ms/op
+//    Result: 0,008 ±(99.9%) 0,000 ms/op [Average]
+//    Statistics: (min, avg, max) = (0,008, 0,008, 0,009), stdev = 0,000
+//    Confidence interval (99.9%): [0,008, 0,009]
+//    Benchmark                              Mode  Cnt  Score   Error  Units
+//    Benchmark_SimpleDto.graphSingleThread  avgt   20  0,008 ± 0,000  ms/op
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 4)
+    @Fork(1)
+    public Object graphMultiThread() {
+        ProductionFlowGraph flow = new ProductionFlowGraph();
+        flow.setUseMultiThreading(true);
+        Dto dto = flow.produceClass(Dto.class);
+        return dto;
+    }
+//    Result: 0,008 ±(99.9%) 0,001 ms/op [Average]
+//    Statistics: (min, avg, max) = (0,006, 0,008, 0,013), stdev = 0,001
+//    Confidence interval (99.9%): [0,007, 0,010]
+//    Benchmark                             Mode  Cnt  Score   Error  Units
+//    Benchmark_SimpleDto.graphMultiThread  avgt   20  0,008 ± 0,001  ms/op
 
     public static class Dto {
         @ValuesProducerResult(producer = Producer.class)

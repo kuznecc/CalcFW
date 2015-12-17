@@ -9,11 +9,15 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
-public class AutowireProducersWithDependencies {
+public class AutowireProducersWithDependencies extends AbstractProductionFlowTest{
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
+
+    public AutowireProducersWithDependencies(ProductionFlow flow) {
+        this.flow = flow;
+    }
 
     @Test
     public void test_ProducerSourceReturnGoodValue() throws Exception {

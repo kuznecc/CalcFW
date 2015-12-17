@@ -9,10 +9,14 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
-public class SpELProducerResultPostProcessing {
+public class SpELProducerResultPostProcessing extends AbstractProductionFlowTest{
     public static final String TEST_VALUE = "testValue";
     public static final String NULL_RESULT = "null";
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
+
+    public SpELProducerResultPostProcessing(ProductionFlow flow) {
+        this.flow = flow;
+    }
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {

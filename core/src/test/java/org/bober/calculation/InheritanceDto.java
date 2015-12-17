@@ -11,11 +11,16 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class InheritanceDto {
+public class InheritanceDto extends AbstractProductionFlowTest{
 
-    public static int index = 1;
+    public static int index;
 
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
+
+    public InheritanceDto(ProductionFlow flow) {
+        this.flow = flow;
+        index = 1;
+    }
 
     @Test
     public void test_SequenceOfProducerInstantiation() throws Exception {

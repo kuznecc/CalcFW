@@ -10,13 +10,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class AutowireProducers {
+public class AutowireProducers extends AbstractProductionFlowTest{
 
     public static final Integer TEST_SIMPLE_PRODUCER_RESULT = 42;
 
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
 
-    @Test
+
+    public AutowireProducers(ProductionFlow flow) {
+        this.flow = flow;
+    }
+
+        @Test
     public void test_SingleProducer() throws Exception {
         TestDto_OneProducer dto = flow.produceClass(TestDto_OneProducer.class);
 

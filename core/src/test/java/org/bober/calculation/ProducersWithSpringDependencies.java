@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ProducersWithSpringDependencies.SpringConfig.class)
-public class ProducersWithSpringDependencies {
+public class ProducersWithSpringDependencies extends AbstractProductionFlowTest{
 
     public static final String BEAN_NAME = "beanName";
     public static final String TEST_VALUE = "value";
@@ -28,7 +28,11 @@ public class ProducersWithSpringDependencies {
     @Autowired
     private ApplicationContext appCtx;
 
-    private ProductionFlow flow = new RecursionProductionFlow();
+    private ProductionFlow flow;
+
+    public ProducersWithSpringDependencies(ProductionFlow flow) {
+        this.flow = flow;
+    }
 
     @Test
     public void test_ComplexProducer() throws Exception {
