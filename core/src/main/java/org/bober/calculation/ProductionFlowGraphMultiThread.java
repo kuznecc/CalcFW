@@ -13,8 +13,8 @@ public class ProductionFlowGraphMultiThread implements ProductionFlow {
 
     @Override
     public <T> T produceClass(Class<T> dtoClass, ApplicationContext appCtx, Map<Class, Object> preparedProductionCtx) {
-        GraphProductionContextBuilder.setUseMultiThread(true);
-        GraphProductionContextBuilder builder = new GraphProductionContextBuilder(appCtx);
+        GraphProductionContextBuilder builder = new GraphProductionContextBuilder(appCtx, preparedProductionCtx);
+        builder.setUseMultiThread(true);
         T dto = builder.buildClass(dtoClass);
         return dto;
     }

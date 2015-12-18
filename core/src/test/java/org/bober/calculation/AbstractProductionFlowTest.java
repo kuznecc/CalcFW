@@ -14,7 +14,11 @@ public abstract class AbstractProductionFlowTest {
     @Parameterized.Parameters
     public static Collection<ProductionFlow[]> flows() {
         return Stream
-                .of(new ProductionFlowRecursion(), new ProductionFlowGraph(), new ProductionFlowGraphMultiThread())
+                .of(
+                        new ProductionFlowRecursion()
+                        , new ProductionFlowGraph()
+//                        , new ProductionFlowGraphMultiThread()
+                )
                 .map(AbstractProductionFlowTest::toArray)
                 .collect(Collectors.toList());
     }

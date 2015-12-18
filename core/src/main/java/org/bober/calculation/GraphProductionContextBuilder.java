@@ -9,10 +9,7 @@ import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -23,23 +20,21 @@ public class GraphProductionContextBuilder {
     private static final Map<Class, SetMultimap<Class, Class>> cachedRelations = new HashMap<>();
     private static final Map<Class, Set<Class>> cachedAllRelatedClasses = new HashMap<>();
 
-    private static boolean useMultiTread = false;
+    private boolean useMultiTread = false;
 
     private Set<Class> producerInterfaceImplementations; // from @PrepareValuesProducers
-    //todo: eliminate Guava usave
+    //todo: eliminate Guava usage
     private SetMultimap<Class, Class> relations = HashMultimap.create(); // key-parentClass, val-childClass
     private Set<Class> allRelatedClasses;
     private Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
     private Map<Class, ChainedWrapper> wrappers = new HashMap<>();
-    private Map<Class, Object> instancesCtx = new HashMap<>();
+    private Map<Class, Object> instancesCtx;
 
     private ApplicationContext springApplicationContext;
 
-    public GraphProductionContextBuilder() {
-
-    }
-
-    public GraphProductionContextBuilder(ApplicationContext springApplicationContext) {
+    public GraphProductionContextBuilder(ApplicationContext springApplicationContext,
+                                         Map<Class, Object> preparedProductionCtx) {
+        instancesCtx = preparedProductionCtx != null ? preparedProductionCtx : new HashMap<>();
         this.springApplicationContext = springApplicationContext;
     }
 
@@ -50,23 +45,35 @@ public class GraphProductionContextBuilder {
         initWrappers();
 
         if (useMultiTread) {
-            executorService = Executors.newFixedThreadPool(10);
+            startExecutorsService();
+            initiateCalculationChain();
+            stopExecutorsService();
+        } else {
+            initiateCalculationChain();
         }
-        initiateCalculationChain();
 
-        if (useMultiTread) {
-            executorService.shutdown();
-            try {
-                executorService.awaitTermination(10, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        for (Class c : instancesCtx.keySet()) {
+            System.out.print(c.getSimpleName() + ", ");
         }
+        System.out.println();
 
         return (T) instancesCtx.get(clazz);
     }
 
-    public static void setUseMultiThread(boolean doWeUseIt) {
+    private void stopExecutorsService() {
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startExecutorsService() {
+        executorService = Executors.newFixedThreadPool(10);
+    }
+
+    public void setUseMultiThread(boolean doWeUseIt) {
         useMultiTread = doWeUseIt;
     }
 
@@ -74,16 +81,14 @@ public class GraphProductionContextBuilder {
         // execute all wrappers that have no relations with other classes
         relationsCounters.keySet().stream()
                 .filter(c -> relationsCounters.get(c).get() == 0)
-                .forEach(c -> {
-                    wrappers.get(c).instantiate(useMultiTread);
-                });
+                .forEach(c -> wrappers.get(c).instantiate());
     }
 
 
     private void initWrappers() {
         for (Class clazz : allRelatedClasses) {
-            wrappers.put(clazz,
-                    new ChainedWrapper(clazz, wrappers, relations, springApplicationContext, instancesCtx, relationsCounters));
+            wrappers.put(clazz, new ChainedWrapper(clazz, wrappers, relations, springApplicationContext, instancesCtx,
+                    relationsCounters, useMultiTread));
         }
     }
 
@@ -158,6 +163,7 @@ public class GraphProductionContextBuilder {
     }
 
     static class ChainedWrapper {
+        private boolean useMultiThreads;
         private Class clazz;
         private Map<Class, ChainedWrapper> wrappers;
         private final ApplicationContext springApplicationContext;
@@ -168,38 +174,38 @@ public class GraphProductionContextBuilder {
         public ChainedWrapper(Class clazz,
                               Map<Class, ChainedWrapper> wrappers,
                               Multimap<Class, Class> relations,
-                              ApplicationContext springApplicationContext, Map<Class, Object> instancesCtx,
-                              Map<Class, AtomicInteger> relationsCounters) {
+                              ApplicationContext springApplicationContext,
+                              Map<Class, Object> instancesCtx,
+                              Map<Class, AtomicInteger> relationsCounters,
+                              boolean useMultiThreads) {
             this.clazz = clazz;
             this.wrappers = wrappers;
             this.springApplicationContext = springApplicationContext;
             this.instancesCtx = instancesCtx;
+            this.useMultiThreads = useMultiThreads;
             myRelationsCounter = relationsCounters.get(clazz);
             myResultConsumers = relations.keySet().stream()
                     .filter(c -> relations.get(c).contains(clazz))
                     .collect(Collectors.toSet());
         }
 
-        public void instantiate(boolean useMultiTreads) {
-            if (useMultiTreads) {
-                CompletableFuture.runAsync(this::instantiate, executorService);
-            } else {
-                instantiate();
-            }
-
-        }
-
         public void instantiate() {
             if (!instancesCtx.containsKey(clazz)) {
-                try {
-                    Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
-                    passProducerResultsToInstance(clazz, instance);
-                    ContextBuilderUtil.putInstanceToCtx(instance, instancesCtx);
-//                    instancesCtx.put(clazz, instance);
-                } catch (ProductionFlowException e) {
-                    throw new RuntimeException("can't make instance for " + clazz.getSimpleName(), e);
+                if (useMultiThreads) {
+                    CompletableFuture.runAsync(this::instantiationTask, executorService);
+                } else {
+                    instantiationTask();
                 }
+            }
+        }
 
+        private void instantiationTask() {
+            try {
+                Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
+                passProducerResultsToInstance(clazz, instance);
+                ContextBuilderUtil.putInstanceToCtx(instance, instancesCtx);
+            } catch (ProductionFlowException e) {
+                throw new RuntimeException("can't make instance for " + clazz.getSimpleName(), e);
             }
 
             resolveMyRelations();
@@ -226,10 +232,10 @@ public class GraphProductionContextBuilder {
             }
         }
 
-        public void resolveRelation() {
+        private void resolveRelation() {
             int counter = myRelationsCounter.decrementAndGet();
             if (counter == 0) {
-                instantiate(useMultiTread);
+                instantiate();
             }
         }
     }
