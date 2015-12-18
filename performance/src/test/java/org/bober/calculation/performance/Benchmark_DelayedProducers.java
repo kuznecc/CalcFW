@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Benchmark_DelayedProducers {
 
+    private static final int DELAY = 0;
+
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -20,11 +22,8 @@ public class Benchmark_DelayedProducers {
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
-//    Result: 104,795 ±(99.9%) 0,547 ms/op [Average] delay=10
-//    Statistics: (min, avg, max) = (104,140, 104,795, 106,001), stdev = 0,629
-//    Confidence interval (99.9%): [104,248, 105,341]
-//    Benchmark                             Mode  Cnt    Score   Error  Units
-//    Benchmark_DelayedProducers.recursion  avgt   20  104,795 ± 0,547  ms/op
+//    Benchmark                             Mode  Cnt  Score   Error  Units
+//    Benchmark_DelayedProducers.recursion  avgt   20  0,021 ± 0,001  ms/op     delay=0
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -36,12 +35,8 @@ public class Benchmark_DelayedProducers {
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
-
-//    Result: 104,640 ±(99.9%) 0,647 ms/op [Average]
-//    Statistics: (min, avg, max) = (103,605, 104,640, 106,687), stdev = 0,746
-//    Confidence interval (99.9%): [103,992, 105,287]
-//    Benchmark                                     Mode  Cnt    Score   Error  Units
-//    Benchmark_DelayedProducers.graphSingleThread  avgt   20  104,640 ± 0,647  ms/op
+//    Benchmark                             Mode  Cnt  Score   Error  Units
+//    Benchmark_DelayedProducers.graph      avgt   20  0,033 ± 0,001  ms/op     delay=0
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -120,7 +115,7 @@ public class Benchmark_DelayedProducers {
         @Override
         protected Map<String, Object> produce() {
             try {
-                Thread.sleep(10);
+                Thread.sleep(DELAY);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

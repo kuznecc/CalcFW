@@ -43,11 +43,6 @@ public class ProductionContextBuilderGraph {
 
         initiateCalculationChain();
 
-        for (Class c : instancesCtx.keySet()) {
-            System.out.print(c.getSimpleName() + ", ");
-        }
-        System.out.println();
-
         return (T) instancesCtx.get(clazz);
     }
 
