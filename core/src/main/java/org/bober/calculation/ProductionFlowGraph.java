@@ -13,8 +13,8 @@ public class ProductionFlowGraph implements ProductionFlow {
 
     @Override
     public <T> T produceClass(Class<T> dtoClass, ApplicationContext appCtx, Map<Class, Object> preparedProductionCtx) {
-        ProductionContextBuilderGraph builder = new ProductionContextBuilderGraph(appCtx, preparedProductionCtx);
-        T dto = builder.buildClass(dtoClass);
+        ProductionContextBuilder builder = new ProductionContextBuilderGraph(appCtx);
+        T dto = builder.buildClass(dtoClass, preparedProductionCtx);
         return dto;
     }
 

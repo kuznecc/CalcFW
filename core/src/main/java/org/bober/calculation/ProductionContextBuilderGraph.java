@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 // All processed classes should have only one instance
-public class ProductionContextBuilderGraph {
+public class ProductionContextBuilderGraph implements ProductionContextBuilder{
     private static final Map<Class, SetMultimap<Class, Class>> cachedRelations = new HashMap<>();
     private static final Map<Class, Set<Class>> cachedAllRelatedClasses = new HashMap<>();
 
@@ -22,20 +22,20 @@ public class ProductionContextBuilderGraph {
     private SetMultimap<Class, Class> relations = HashMultimap.create(); // key-parentClass, val-childClass
     private Set<Class> preparedClasses;
     private Set<Class> allRelatedClasses;
-    private Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
-    private Map<Class, ChainedWrapper> wrappers = new HashMap<>();
+    protected Map<Class, AtomicInteger> relationsCounters = new HashMap<>();
+    protected Map<Class, ChainedWrapper> wrappers = new HashMap<>();
     private Map<Class, Object> instancesCtx;
 
     private ApplicationContext springApplicationContext;
 
-    public ProductionContextBuilderGraph(ApplicationContext springApplicationContext,
-                                         Map<Class, Object> preparedProductionCtx) {
-        instancesCtx = preparedProductionCtx != null ? preparedProductionCtx : new HashMap<>();
-        preparedClasses = Collections.unmodifiableSet(instancesCtx.keySet());
+    public ProductionContextBuilderGraph(ApplicationContext springApplicationContext) {
         this.springApplicationContext = springApplicationContext;
     }
 
-    public <T> T buildClass(Class<T> clazz) {
+    @Override
+    public <T> T buildClass(Class<T> clazz, Map<Class, Object> preparedProducersCtx) {
+        instancesCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
+        preparedClasses = Collections.unmodifiableSet(instancesCtx.keySet());
         cachedRelations(clazz);
         cachedAllRelatedClasses(clazz);
         initRelationCounters();
@@ -43,6 +43,10 @@ public class ProductionContextBuilderGraph {
 
         initiateCalculationChain();
 
+        return getInstance(clazz);
+    }
+
+    protected  <T> T getInstance(Class<T> clazz) {
         return (T) instancesCtx.get(clazz);
     }
 
@@ -170,6 +174,7 @@ public class ProductionContextBuilderGraph {
         public void instantiate() {
             if (!instancesCtx.containsKey(clazz)) {
                 instantiationTask();
+                resolveMyRelations();
             }
         }
 
@@ -181,26 +186,24 @@ public class ProductionContextBuilderGraph {
             } catch (ProductionFlowException e) {
                 throw new RuntimeException("can't make instance for " + clazz.getSimpleName(), e);
             }
-
-            resolveMyRelations();
         }
 
         private void passProducerResultsToInstance(Class clazz, Object instance) {
             List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.fetchClassFields(clazz);
-            for (Field field : classFieldsWithRespectToParents) {
-                if (field.isAnnotationPresent(ValuesProducerResult.class)) {
+            classFieldsWithRespectToParents.stream()
+                    .filter(field -> field.isAnnotationPresent(ValuesProducerResult.class))
+                    .forEach(field -> passProducerResultsToField(clazz, instance, field));
+        }
 
-                    try {
-                        ContextBuilderUtil.passProducerResultToField(instance, field, instancesCtx);
-                    } catch (ProductionFlowException e) {
-                        throw new RuntimeException("Saturating of " + clazz.getSimpleName() + "|" + e.getMessage(), e);
-                    }
-
-                }
+        private void passProducerResultsToField(Class clazz, Object instance, Field field) {
+            try {
+                ContextBuilderUtil.passProducerResultToField(instance, field, instancesCtx);
+            } catch (ProductionFlowException e) {
+                throw new RuntimeException("Saturating of " + clazz.getSimpleName() + "|" + e.getMessage(), e);
             }
         }
 
-        private void resolveMyRelations() {
+        protected void resolveMyRelations() {
             for (Class resultConsumer : myResultConsumers) {
                 wrappers.get(resultConsumer).resolveRelation();
             }

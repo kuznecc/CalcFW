@@ -13,7 +13,7 @@ public class ProductionFlowRecursion implements ProductionFlow {
 
     @Override
     public <T> T produceClass(Class<T> dtoClass, ApplicationContext appCtx, Map<Class, Object> preparedProductionCtx) {
-        ProductionContextBuilder builder = new ProductionContextBuilder(appCtx);
+        ProductionContextBuilder builder = new ProductionContextBuilderRecursion(appCtx);
         T dto = builder.buildClass(dtoClass, preparedProductionCtx);
         return dto;
     }
