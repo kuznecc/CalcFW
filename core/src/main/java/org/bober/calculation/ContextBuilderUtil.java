@@ -14,8 +14,9 @@ import static org.bober.calculation.SpELProcessor.isItSpelOnFieldDetected;
 public class ContextBuilderUtil {
 
     private static final Map<Class, List<Field>> classFieldsCache = new HashMap<>();
-    private static final Map<Class, List<Class>> reversedClassInherentChainCache = new HashMap<>();
+    private static final Map<Class, List<Class>> contextKeysCache = new HashMap<>();
 
+    private static final Map<Class, List<Class>> reversedClassInherentChainCache = new HashMap<>();
 
     public static List<Class> buildReversedClassInherentChain(Class clazz) {
         if (!reversedClassInherentChainCache.containsKey(clazz)) {
@@ -73,14 +74,26 @@ public class ContextBuilderUtil {
      */
     public static void putInstanceToCtx(Object instance, Map<Class, Object> ctx) {
         Class<?> clazz = instance.getClass();
-        ctx.put(clazz, instance);
+        if (!(contextKeysCache.containsKey(clazz))) {
+            addContextKeys(clazz);
+        }
+        for (Class c : contextKeysCache.get(clazz)) {
+            ctx.put(c, instance);
+        }
+    }
 
-        Class<?>[] interfaces = clazz.getInterfaces();
+    private static synchronized void addContextKeys(Class clazz) {
+        if (!(contextKeysCache.containsKey(clazz))) {
+            List<Class> keys = new ArrayList<>();
+            keys.add(clazz);
 
-        for (Class<?> anInterface : interfaces) {
-            if (ValuesProducer.class.isAssignableFrom(anInterface)) {
-                ctx.put(anInterface, instance);
+            Class<?>[] interfaces = clazz.getInterfaces();
+            for (Class<?> anInterface : interfaces) {
+                if (!ValuesProducer.class.equals(anInterface) && ValuesProducer.class.isAssignableFrom(anInterface)) {
+                    keys.add(anInterface);
+                }
             }
+            contextKeysCache.put(clazz, keys);
         }
     }
     public static void passProducerResultToField(Object instance, Field field, Map<Class, Object> producersCtx)
@@ -93,14 +106,14 @@ public class ContextBuilderUtil {
 
         try {
             if (producerInstance == null && isResultRequired) {
-                String msg = String.format("There are no needed producer in producers context, but it's required. %s",
+                String msg = String.format("No instance of %s in context.",
                         producerClass.getName());
                 throw new ProductionFlowException(msg);
             }
 
             Map<String, Object> producerResult = producerInstance != null ? producerInstance.getResult() : emptyMap();
             if (!producerResult.containsKey(producerResultName) && isResultRequired) {
-                String msg = String.format("Producer %s haven't result %s that required",
+                String msg = String.format("Producer %s haven't required result %s.",
                         producerClass.getName(), producerResultName);
                 throw new ProductionFlowException(msg);
             }
@@ -126,8 +139,8 @@ public class ContextBuilderUtil {
             }
 
         } catch (ProductionFlowException e) {
-            String msg = String.format("Setting value to field %s", field.getName());
-            throw new ProductionFlowException(msg);
+            String msg = String.format("set %s", field.getName());
+            throw new ProductionFlowException(msg, e);
         }
     }
 

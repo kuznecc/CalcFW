@@ -41,31 +41,35 @@ public class ProductionContextBuilderRecursionMultiThread implements ProductionC
 
         private final Class clazz;
         private final Map<Class, Object> ctx;
+
         private final ApplicationContext springApplicationContext;
 
         public InstantiationTask(Class clazz, Map<Class, Object> ctx, ApplicationContext springApplicationContext) {
             this.clazz = clazz;
             this.ctx = ctx;
             this.springApplicationContext = springApplicationContext;
+
+            if (ctx.containsKey(clazz) ) {
+                ContextBuilderUtil.putInstanceToCtx(this, ctx);
+            }
         }
 
         @Override
         protected void compute() {
             try {
-                if (ctx.containsKey(clazz)) {
+                if (ctx.containsKey(clazz) ) {
                     return;
                 }
 
                 Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
-                System.out.println("new " + clazz.getSimpleName());
 
-                List<InstantiationTask> producersInvocationTasks = getRelatedProducers(clazz).stream()
-                        .map(c -> new InstantiationTask(c, ctx, springApplicationContext))
-                        .collect(toList());
+                InstantiationTask[] producersInvocationTasks = makeProducersInvocationTasks(clazz);
 
                 ForkJoinTask.invokeAll(producersInvocationTasks);
 
-                producersInvocationTasks.forEach(InstantiationTask::join);
+                for (InstantiationTask producersInvocationTask : producersInvocationTasks) {
+                    producersInvocationTask.join();
+                }
 
                 for (Field field : getAnnotatedFields(clazz)) {
                     ContextBuilderUtil.passProducerResultToField(instance, field, ctx);
@@ -73,9 +77,18 @@ public class ProductionContextBuilderRecursionMultiThread implements ProductionC
                 ContextBuilderUtil.putInstanceToCtx(instance,ctx);
 
             } catch (ProductionFlowException e) {
-                String msg = String.format(" %s |" + e.getMessage(), clazz.getSimpleName());
+                String msg = String.format("new %s |" + e.getMessage(), clazz.getSimpleName());
                 throw new RuntimeException(msg, e);
             }
+        }
+
+        private InstantiationTask[] makeProducersInvocationTasks(Class clazz) {
+            List<Class> relatedProducers = getRelatedProducers(clazz);
+            InstantiationTask[] tasks = new InstantiationTask[relatedProducers.size()];
+            for (int i = 0; i < tasks.length; i++) {
+                tasks[i] = new InstantiationTask(relatedProducers.get(i), ctx, springApplicationContext);
+            }
+            return tasks;
         }
 
         private List<Class> getRelatedProducers(Class clazz) {
@@ -87,12 +100,11 @@ public class ProductionContextBuilderRecursionMultiThread implements ProductionC
 
                 Stream<Class> onFieldProducers = getAnnotatedFields(clazz).stream()
                         .map(field -> (Class) field.getAnnotation(ValuesProducerResult.class).producer())
-                        .filter(p -> !ctx.containsKey(p))
-                        .filter(p-> !p.isInterface())
-                        .distinct();
+                        .filter(p-> !p.isInterface());
 
                 List<Class> producers = Stream
                         .concat(onClassProducers, onFieldProducers)
+                        .distinct()
                         .collect(toList());
 
                 relatedProducers.put(clazz, producers);

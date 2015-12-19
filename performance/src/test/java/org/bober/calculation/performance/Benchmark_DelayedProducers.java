@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Benchmark_DelayedProducers {
 
-    private static final int DELAY = 0;
+    private static final int DELAY = 5;
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -24,6 +24,7 @@ public class Benchmark_DelayedProducers {
     }
 //    Benchmark                             Mode  Cnt  Score   Error  Units
 //    Benchmark_DelayedProducers.recursion  avgt   20  0,021 ± 0,001  ms/op     delay=0
+//    Benchmark_DelayedProducers.recursion  avgt   20  55,709 ± 0,351  ms/op    delay=5
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -34,7 +35,9 @@ public class Benchmark_DelayedProducers {
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
-
+//    Benchmark                                        Mode  Cnt  Score   Error  Units
+//    Benchmark_DelayedProducers.recursionMultiThread  avgt   20  0,055 ± 0,009  ms/op      delay=0
+//    Benchmark_DelayedProducers.recursionMultiThread  avgt   20  49,312 ± 0,509  ms/op     delay=5
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -46,8 +49,9 @@ public class Benchmark_DelayedProducers {
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
-//    Benchmark                             Mode  Cnt  Score   Error  Units
-//    Benchmark_DelayedProducers.graph      avgt   20  0,033 ± 0,001  ms/op     delay=0
+//    Benchmark                                     Mode  Cnt  Score   Error  Units
+//    Benchmark_DelayedProducers.graphSingleThread  avgt   20  0,033 ± 0,001  ms/op     delay=0
+//    Benchmark_DelayedProducers.graphSingleThread  avgt   20  55,672 ± 0,319  ms/op    delay=5
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
@@ -76,6 +80,16 @@ public class Benchmark_DelayedProducers {
         public String p3;
         @ValuesProducerResult(producer = P4.class)
         public String p4;
+
+        @Override
+        public String toString() {
+            return "Dto{" +
+                    "p1='" + p1 + '\'' +
+                    ", p2='" + p2 + '\'' +
+                    ", p3='" + p3 + '\'' +
+                    ", p4='" + p4 + '\'' +
+                    '}';
+        }
     }
 
     public static class P1 extends P {
