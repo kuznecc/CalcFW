@@ -24,6 +24,17 @@ public class Benchmark_DelayedProducers {
     }
 //    Benchmark                             Mode  Cnt  Score   Error  Units
 //    Benchmark_DelayedProducers.recursion  avgt   20  0,021 ± 0,001  ms/op     delay=0
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 4)
+    @Fork(1)
+    public Object recursionMultiThread() {
+        ProductionFlow flow = new ProductionFlowRecursionMultiThread();
+        Dto dto = flow.produceClass(Dto.class);
+        return dto;
+    }
+
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
