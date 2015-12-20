@@ -87,12 +87,11 @@ public class ContextBuilderUtil {
             List<Class> keys = new ArrayList<>();
             keys.add(clazz);
 
-            Class<?>[] interfaces = clazz.getInterfaces();
-            for (Class<?> anInterface : interfaces) {
-                if (!ValuesProducer.class.equals(anInterface) && ValuesProducer.class.isAssignableFrom(anInterface)) {
-                    keys.add(anInterface);
-                }
-            }
+            Arrays.stream(clazz.getInterfaces())
+                    .filter(i->!ValuesProducer.class.equals(i))
+                    .filter(ValuesProducer.class::isAssignableFrom)
+                    .forEach(keys::add);
+
             contextKeysCache.put(clazz, keys);
         }
     }
