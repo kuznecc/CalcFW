@@ -17,7 +17,8 @@ public abstract class AbstractProductionFlowTest {
                 .of(
                         new ProductionFlowRecursion()
                         , new ProductionFlowGraph()
-                        , new ProductionFlowRecursionMultiThread()
+                        , new ProductionFlowMultiThreadRecursiveTask()
+                        , new ProductionFlowMultiThreadCountedCompleter()
 //                        , new ProductionFlowGraphMultiThread()
                 )
                 .map(AbstractProductionFlowTest::toArray)

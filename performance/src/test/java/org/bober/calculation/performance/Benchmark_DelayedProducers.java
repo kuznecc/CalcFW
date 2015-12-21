@@ -31,7 +31,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursionMultiThread() {
-        ProductionFlow flow = new ProductionFlowRecursionMultiThread();
+        ProductionFlow flow = new ProductionFlowMultiThreadRecursiveTask();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
