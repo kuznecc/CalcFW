@@ -16,15 +16,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class ProducersWithSpringDependencies extends AbstractProductionFlowTest{
+public class ProducersWithSpringDependencies extends AbstractCalcFlowTest {
 
     public static final String BEAN_NAME = "beanName";
     public static final String TEST_VALUE = "value";
 
     private ApplicationContext appCtx = new AnnotationConfigApplicationContext(SpringConfig.class);
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public ProducersWithSpringDependencies(ProductionFlow flow) {
+    public ProducersWithSpringDependencies(CalcFlow flow) {
         this.flow = flow;
     }
 

@@ -12,16 +12,16 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-public class RealValueTypesSettingTest extends AbstractProductionFlowTest{
+public class RealValueTypesSettingTest extends AbstractCalcFlowTest {
 
     public static final String TEST_STRING = "qwerty";
     public static final Integer TEST_INTEGER = 42;
     public static final Long TEST_LONG = 42222L;
     public static final LocalDate TEST_LOCAL_DATE = LocalDate.of(1999,9,9);
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public RealValueTypesSettingTest(ProductionFlow flow) {
+    public RealValueTypesSettingTest(CalcFlow flow) {
         this.flow = flow;
     }
 

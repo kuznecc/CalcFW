@@ -9,19 +9,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RunWith(value = Parameterized.class)
-public abstract class AbstractProductionFlowTest {
+public abstract class AbstractCalcFlowTest {
 
     @Parameterized.Parameters
-    public static Collection<ProductionFlow[]> flows() {
+    public static Collection<CalcFlow[]> flows() {
+        // Instances of CalcFlow implementations that will be tested with all child tests
         return Stream
-                .of(
-                        new ProductionFlowRecursion()
-                        , new ProductionFlowGraph()
-                        , new ProductionFlowMultiThreadRecursiveTask()
-                        , new ProductionFlowMultiThreadCountedCompleter()
-//                        , new ProductionFlowGraphMultiThread()
-                )
-                .map(AbstractProductionFlowTest::toArray)
+                .of(new CalcFlowRecursion(),
+                        new CalcFlowGraph(),
+                        new CalcFlowParallelRecursion())
+                .map(AbstractCalcFlowTest::toArray)
                 .collect(Collectors.toList());
     }
 

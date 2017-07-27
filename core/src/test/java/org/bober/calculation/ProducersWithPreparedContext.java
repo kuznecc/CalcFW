@@ -11,13 +11,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class ProducersWithPreparedContext extends AbstractProductionFlowTest{
+public class ProducersWithPreparedContext extends AbstractCalcFlowTest {
 
     public static final String TEST_VALUE = "value";
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public ProducersWithPreparedContext(ProductionFlow flow) {
+    public ProducersWithPreparedContext(CalcFlow flow) {
         this.flow = flow;
     }
 

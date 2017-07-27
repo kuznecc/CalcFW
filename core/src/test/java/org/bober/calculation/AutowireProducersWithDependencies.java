@@ -9,13 +9,13 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
-public class AutowireProducersWithDependencies extends AbstractProductionFlowTest{
+public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public AutowireProducersWithDependencies(ProductionFlow flow) {
+    public AutowireProducersWithDependencies(CalcFlow flow) {
         this.flow = flow;
     }
 

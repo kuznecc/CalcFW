@@ -11,13 +11,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class InheritanceDto extends AbstractProductionFlowTest{
+public class InheritanceDto extends AbstractCalcFlowTest {
 
     private static final int VALUE = 1;
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public InheritanceDto(ProductionFlow flow) {
+    public InheritanceDto(CalcFlow flow) {
         this.flow = flow;
     }
 

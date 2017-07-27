@@ -52,7 +52,7 @@ public class ContextBuilderUtil {
     }
 
     public static Object makeNewInstance(Class clazz, ApplicationContext springApplicationContext)
-            throws ProductionFlowException {
+            throws CalcFlowException {
         if (springApplicationContext != null) {
             AutowireCapableBeanFactory beanFactory = springApplicationContext.getAutowireCapableBeanFactory();
             Object bean = beanFactory.createBean(clazz);
@@ -64,7 +64,7 @@ public class ContextBuilderUtil {
             return clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             String msg = String.format("Can't create an instance of %s via reflection", clazz.getName());
-            throw new ProductionFlowException(msg, e);
+            throw new CalcFlowException(msg, e);
         }
     }
 
@@ -96,7 +96,7 @@ public class ContextBuilderUtil {
         }
     }
     public static void passProducerResultToField(Object instance, Field field, Map<Class, Object> producersCtx)
-            throws ProductionFlowException {
+            throws CalcFlowException {
         ValuesProducerResult annotation = field.getAnnotation(ValuesProducerResult.class);
         Class<ValuesProducer>   producerClass = (Class<ValuesProducer>) annotation.producer();
         String                  producerResultName = annotation.resultName();
@@ -107,14 +107,14 @@ public class ContextBuilderUtil {
             if (producerInstance == null && isResultRequired) {
                 String msg = String.format("No instance of %s in context.",
                         producerClass.getName());
-                throw new ProductionFlowException(msg);
+                throw new CalcFlowException(msg);
             }
 
             Map<String, Object> producerResult = producerInstance != null ? producerInstance.getResult() : emptyMap();
             if (!producerResult.containsKey(producerResultName) && isResultRequired) {
                 String msg = String.format("Producer %s haven't required result %s.",
                         producerClass.getName(), producerResultName);
-                throw new ProductionFlowException(msg);
+                throw new CalcFlowException(msg);
             }
 
             Object fieldValue;
@@ -134,12 +134,12 @@ public class ContextBuilderUtil {
                 field.set(instance, fieldValue);
             } catch (IllegalAccessException e) {
                 String msg = String.format("Can't pass value %s", fieldValue!=null?fieldValue:null);
-                throw new ProductionFlowException(msg, e);
+                throw new CalcFlowException(msg, e);
             }
 
-        } catch (ProductionFlowException e) {
+        } catch (CalcFlowException e) {
             String msg = String.format("set %s", field.getName());
-            throw new ProductionFlowException(msg, e);
+            throw new CalcFlowException(msg, e);
         }
     }
 

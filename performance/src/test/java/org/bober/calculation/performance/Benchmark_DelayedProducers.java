@@ -18,7 +18,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursion() {
-        ProductionFlow flow = new ProductionFlowRecursion();
+        CalcFlow flow = new CalcFlowRecursion();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -31,7 +31,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursionMultiThread() {
-        ProductionFlow flow = new ProductionFlowMultiThreadRecursiveTask();
+        CalcFlow flow = new CalcFlowParallelRecursion();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -45,30 +45,13 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphSingleThread() {
-        ProductionFlowGraph flow = new ProductionFlowGraph();
+        CalcFlowGraph flow = new CalcFlowGraph();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
 //    Benchmark                                     Mode  Cnt  Score   Error  Units
 //    Benchmark_DelayedProducers.graphSingleThread  avgt   20  0,033 ± 0,001  ms/op     delay=0
 //    Benchmark_DelayedProducers.graphSingleThread  avgt   20  55,672 ± 0,319  ms/op    delay=5
-
-    @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    @Warmup(iterations = 4)
-    @Fork(1)
-    public Object graphMultiThread() {
-        ProductionFlow flow = new ProductionFlowGraphMultiThread();
-        Dto dto = flow.produceClass(Dto.class);
-        return dto;
-    }
-
-//    Result: 5,835 ±(99.9%) 8,162 ms/op [Average]
-//    Statistics: (min, avg, max) = (0,019, 5,835, 35,436), stdev = 9,399
-//    Confidence interval (99.9%): [-2,326, 13,997]
-//    Benchmark                                    Mode  Cnt  Score   Error  Units
-//    Benchmark_DelayedProducers.graphMultiThread  avgt   20  5,835 ± 8,162  ms/op
 
 
     public static class Dto {

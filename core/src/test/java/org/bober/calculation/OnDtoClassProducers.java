@@ -11,13 +11,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class OnDtoClassProducers extends AbstractProductionFlowTest{
+public class OnDtoClassProducers extends AbstractCalcFlowTest {
 
     public static final Integer TEST_VALUE = 42;
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
-    public OnDtoClassProducers(ProductionFlow flow) {
+    public OnDtoClassProducers(CalcFlow flow) {
         this.flow = flow;
     }
 

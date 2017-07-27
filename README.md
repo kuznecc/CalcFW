@@ -1,4 +1,7 @@
-
+#CalcFW 
+`CalcFW` is a `Calculation framework` that intended to organize process of complex dto creation that contains 
+a lot of tightly related and cross depended values that have to be recalculated each time when you need 
+new dto-instance.  
 
 ###Main classes:
 
@@ -8,7 +11,7 @@
 - `@ValuesProducerResult` - this annotation used for binding of producer result to some class field.
 - `@PrepareValuesProducer` - you will need this annotation only if you want to pass in the same
     'producer A' field results of different 'producer B' implementation.
-- `class ProductionFlow` - entry point of framework.
+- `class CalcFlow` - entry point of framework.
 
 ###Abstraction
 
@@ -18,16 +21,16 @@
 - **ProducersContext** - It's `Map<Class, Object>` that contain instances of all founded producers.
 
 ###How it works:
-1. Pass root class to `ProductionFlow` for further processing.
+1. Pass root class to `CalcFlow` for further processing.
 2. Process on class annotation `@PrepareValuesProducer`.  
   - Collect producers that mentioned in this annotation from this class and they parent classes,
     instantiate it all and put to producers context. Instantiation of this producers will performed
     as it described in steps 3-5 .
 3. Make instantiate of specified class via default constructor.
-  - If you've passed Spring Application Context to `ProductionFlow` than instance will be created
+  - If you've passed Spring Application Context to `CalcFlow` than instance will be created
     via BeanFactory from it. So due instantiation process all Spring annotations (like`@Autowire`) will be
     processed and you will got fully wired object.
-  - If you aren't pass Spring context to ProductionFlow than instantiation of class will be performed
+  - If you aren't pass Spring context to CalcFlow than instantiation of class will be performed
     straightway via java reflection.
 4. Wire instance fields with producer results. Repeat this steps for each annotated field :
   - Iterate instance class fields for annotation `@ValuesProducerResult`

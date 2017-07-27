@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 // All processed classes should have only one instance
-public class ProductionContextBuilderGraph implements ProductionContextBuilder{
+public class CalcContextBuilderGraph implements CalcContextBuilder {
     private static final Map<Class, SetMultimap<Class, Class>> cachedRelations = new HashMap<>();
     private static final Map<Class, Set<Class>> cachedAllRelatedClasses = new HashMap<>();
 
@@ -28,7 +28,7 @@ public class ProductionContextBuilderGraph implements ProductionContextBuilder{
 
     private ApplicationContext springApplicationContext;
 
-    public ProductionContextBuilderGraph(ApplicationContext springApplicationContext) {
+    public CalcContextBuilderGraph(ApplicationContext springApplicationContext) {
         this.springApplicationContext = springApplicationContext;
     }
 
@@ -183,7 +183,7 @@ public class ProductionContextBuilderGraph implements ProductionContextBuilder{
                 Object instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
                 passProducerResultsToInstance(clazz, instance);
                 ContextBuilderUtil.putInstanceToCtx(instance, instancesCtx);
-            } catch (ProductionFlowException e) {
+            } catch (CalcFlowException e) {
                 throw new RuntimeException("can't make instance for " + clazz.getSimpleName(), e);
             }
         }
@@ -198,7 +198,7 @@ public class ProductionContextBuilderGraph implements ProductionContextBuilder{
         private void passProducerResultsToField(Class clazz, Object instance, Field field) {
             try {
                 ContextBuilderUtil.passProducerResultToField(instance, field, instancesCtx);
-            } catch (ProductionFlowException e) {
+            } catch (CalcFlowException e) {
                 throw new RuntimeException("Saturating of " + clazz.getSimpleName() + "|" + e.getMessage(), e);
             }
         }

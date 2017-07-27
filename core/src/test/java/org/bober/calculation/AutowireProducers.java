@@ -10,14 +10,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class AutowireProducers extends AbstractProductionFlowTest{
+public class AutowireProducers extends AbstractCalcFlowTest {
 
     public static final Integer TEST_SIMPLE_PRODUCER_RESULT = 42;
 
-    private ProductionFlow flow;
+    private CalcFlow flow;
 
 
-    public AutowireProducers(ProductionFlow flow) {
+    public AutowireProducers(CalcFlow flow) {
         this.flow = flow;
     }
 

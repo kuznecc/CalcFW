@@ -12,14 +12,14 @@ import java.util.Map;
 // todo: do we need to process @PrepareValuesProducer on @ValuesProducerResult
 // todo: add caching of dto and producers structure to eliminate redundant on fields iteration
 // todo: ? add loggers ?
-public class ProductionContextBuilderRecursion implements ProductionContextBuilder{
+public class CalcContextBuilderRecursion implements CalcContextBuilder {
     private ApplicationContext springApplicationContext;
 
-    public ProductionContextBuilderRecursion() {
+    public CalcContextBuilderRecursion() {
 
     }
 
-    public ProductionContextBuilderRecursion(ApplicationContext springApplicationContext) {
+    public CalcContextBuilderRecursion(ApplicationContext springApplicationContext) {
         this.springApplicationContext = springApplicationContext;
     }
 
@@ -29,7 +29,7 @@ public class ProductionContextBuilderRecursion implements ProductionContextBuild
         try {
             instantiateProducersFromClassAnnotations(clazz, producersCtx);
             instantiateClassesRecursivelyAndWireResults(clazz, producersCtx);
-        } catch (ProductionFlowException e) {
+        } catch (CalcFlowException e) {
             String msg = String.format("Error due building class %s", clazz.getName());
             throw new RuntimeException(msg, e);
         }
@@ -38,7 +38,7 @@ public class ProductionContextBuilderRecursion implements ProductionContextBuild
     }
 
     private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map<Class, Object> ctx)
-            throws ProductionFlowException {
+            throws CalcFlowException {
         List<Class> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
         for (Class rClazz : relatedClasses) {
             if (rClazz.isAnnotationPresent(PrepareValuesProducer.class)) {
@@ -47,8 +47,8 @@ public class ProductionContextBuilderRecursion implements ProductionContextBuild
                 for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
                     try {
                         instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
-                    } catch (ProductionFlowException e) {
-                        throw new ProductionFlowException("Processing @PrepareValuesProducer", e);
+                    } catch (CalcFlowException e) {
+                        throw new CalcFlowException("Processing @PrepareValuesProducer", e);
                     }
                 }
             }
@@ -56,7 +56,7 @@ public class ProductionContextBuilderRecursion implements ProductionContextBuild
     }
 
     private void instantiateClassesRecursivelyAndWireResults(Class clazz, Map<Class, Object> ctx)
-            throws ProductionFlowException {
+            throws CalcFlowException {
         if (ctx.containsKey(clazz)) {
             return;
         }
@@ -74,9 +74,9 @@ public class ProductionContextBuilderRecursion implements ProductionContextBuild
                     ContextBuilderUtil.passProducerResultToField(instance, field, ctx);
                 }
             }
-        } catch (ProductionFlowException e) {
+        } catch (CalcFlowException e) {
             String msg = String.format("instantiation %s", clazz.getName());
-            throw new ProductionFlowException(msg,e);
+            throw new CalcFlowException(msg,e);
         }
 
         ContextBuilderUtil.putInstanceToCtx(instance, ctx);
