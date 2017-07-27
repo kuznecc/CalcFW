@@ -1,16 +1,16 @@
 package org.bober.calculation;
 
 
-import org.bober.calculation.annotation.PrepareValuesProducer;
-import org.bober.calculation.annotation.ValuesProducerResult;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bober.calculation.annotation.PrepareValuesProducer;
+import org.bober.calculation.annotation.ValuesProducerResult;
+
 public class Demonstration {
 
-    public static void main(String[] args) {
-        CalcFlow flow = new CalcFlowRecursion();
+    public static void main(String[] args) throws Exception {
+        CalcFlow flow = CalcFlow.recursive();
         GuitaristDto guitarist = flow.produceClass(GuitaristDto.class);
         DrummerDto drummer = flow.produceClass(DrummerDto.class);
         System.out.println();
@@ -37,7 +37,7 @@ public class Demonstration {
     }
 
 
-    public static class DrummerHitsPerSecond extends AbstractValuesProducer{
+    public static class DrummerHitsPerSecond extends AbstractValuesProducer {
         @Override
         protected Map<String, Object> produce() {
             return wrapSingleResult(3);

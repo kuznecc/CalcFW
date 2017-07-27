@@ -1,12 +1,18 @@
 
 package org.bober.calculation.performance;
 
-import org.bober.calculation.*;
-import org.bober.calculation.annotation.ValuesProducerResult;
-import org.openjdk.jmh.annotations.*;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import org.bober.calculation.AbstractValuesProducer;
+import org.bober.calculation.CalcFlow;
+import org.bober.calculation.annotation.ValuesProducerResult;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Warmup;
 
 public class Benchmark_DelayedProducers {
 
@@ -18,7 +24,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursion() {
-        CalcFlow flow = new CalcFlowRecursion();
+        CalcFlow flow = CalcFlow.recursive();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -31,7 +37,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursionMultiThread() {
-        CalcFlow flow = new CalcFlowParallelRecursion();
+        CalcFlow flow = CalcFlow.parallelRecursion();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -45,7 +51,7 @@ public class Benchmark_DelayedProducers {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphSingleThread() {
-        CalcFlowGraph flow = new CalcFlowGraph();
+        CalcFlow flow = CalcFlow.graph();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }

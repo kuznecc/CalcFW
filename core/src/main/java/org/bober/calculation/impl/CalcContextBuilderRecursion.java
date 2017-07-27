@@ -1,5 +1,9 @@
-package org.bober.calculation;
+package org.bober.calculation.impl;
 
+import org.bober.calculation.CalcContextBuilder;
+import org.bober.calculation.CalcFlowException;
+import org.bober.calculation.ContextBuilderUtil;
+import org.bober.calculation.ValuesProducer;
 import org.bober.calculation.annotation.PrepareValuesProducer;
 import org.bober.calculation.annotation.ValuesProducerResult;
 import org.springframework.context.ApplicationContext;
@@ -13,22 +17,14 @@ import java.util.Map;
 // todo: add caching of dto and producers structure to eliminate redundant on fields iteration
 // todo: ? add loggers ?
 public class CalcContextBuilderRecursion implements CalcContextBuilder {
-    private ApplicationContext springApplicationContext;
 
-    public CalcContextBuilderRecursion() {
-
-    }
-
-    public CalcContextBuilderRecursion(ApplicationContext springApplicationContext) {
-        this.springApplicationContext = springApplicationContext;
-    }
-
-    public <T> T buildClass(Class<T> clazz, Map<Class, Object> preparedProducersCtx) {
+    @Override
+    public <T> T buildClass(Class<T> clazz, ApplicationContext springAppCtx, Map<Class, Object> preparedProducersCtx) {
         Map<Class, Object> producersCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
 
         try {
-            instantiateProducersFromClassAnnotations(clazz, producersCtx);
-            instantiateClassesRecursivelyAndWireResults(clazz, producersCtx);
+            instantiateProducersFromClassAnnotations(clazz, springAppCtx, producersCtx);
+            instantiateClassesRecursivelyAndWireResults(clazz, springAppCtx, producersCtx);
         } catch (CalcFlowException e) {
             String msg = String.format("Error due building class %s", clazz.getName());
             throw new RuntimeException(msg, e);
@@ -37,7 +33,8 @@ public class CalcContextBuilderRecursion implements CalcContextBuilder {
         return (T) producersCtx.get(clazz);
     }
 
-    private void instantiateProducersFromClassAnnotations(Class<?> clazz, Map<Class, Object> ctx)
+    private void instantiateProducersFromClassAnnotations(Class<?> clazz, ApplicationContext springAppCtx,
+                                                          Map<Class, Object> ctx)
             throws CalcFlowException {
         List<Class> relatedClasses = ContextBuilderUtil.buildReversedClassInherentChain(clazz);
         for (Class rClazz : relatedClasses) {
@@ -46,7 +43,7 @@ public class CalcContextBuilderRecursion implements CalcContextBuilder {
                         ((Class<?>) rClazz).getAnnotation(PrepareValuesProducer.class).value();
                 for (Class<? extends ValuesProducer> producerClass : onClassProducers) {
                     try {
-                        instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
+                        instantiateClassesRecursivelyAndWireResults(producerClass, springAppCtx, ctx);
                     } catch (CalcFlowException e) {
                         throw new CalcFlowException("Processing @PrepareValuesProducer", e);
                     }
@@ -55,7 +52,8 @@ public class CalcContextBuilderRecursion implements CalcContextBuilder {
         }
     }
 
-    private void instantiateClassesRecursivelyAndWireResults(Class clazz, Map<Class, Object> ctx)
+    private void instantiateClassesRecursivelyAndWireResults(Class clazz, ApplicationContext springAppCtx,
+                                                             Map<Class, Object> ctx)
             throws CalcFlowException {
         if (ctx.containsKey(clazz)) {
             return;
@@ -63,13 +61,13 @@ public class CalcContextBuilderRecursion implements CalcContextBuilder {
 
         Object instance;
         try {
-            instance = ContextBuilderUtil.makeNewInstance(clazz, springApplicationContext);
+            instance = ContextBuilderUtil.makeNewInstance(clazz, springAppCtx);
             List<Field> classFieldsWithRespectToParents = ContextBuilderUtil.fetchClassFields(clazz);
             for (Field field : classFieldsWithRespectToParents) {
                 if (field.isAnnotationPresent(ValuesProducerResult.class)) {
                     Class<? extends ValuesProducer> producerClass = field.getAnnotation(ValuesProducerResult.class).producer();
 
-                    instantiateClassesRecursivelyAndWireResults(producerClass, ctx);
+                    instantiateClassesRecursivelyAndWireResults(producerClass, springAppCtx, ctx);
 
                     ContextBuilderUtil.passProducerResultToField(instance, field, ctx);
                 }

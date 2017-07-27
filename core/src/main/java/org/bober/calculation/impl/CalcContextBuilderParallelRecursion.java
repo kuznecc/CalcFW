@@ -1,4 +1,4 @@
-package org.bober.calculation;
+package org.bober.calculation.impl;
 
 import static java.util.stream.Collectors.toList;
 
@@ -11,27 +11,21 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.stream.Stream;
 
+import org.bober.calculation.CalcContextBuilder;
+import org.bober.calculation.CalcFlowException;
+import org.bober.calculation.ContextBuilderUtil;
 import org.bober.calculation.annotation.PrepareValuesProducer;
 import org.bober.calculation.annotation.ValuesProducerResult;
 import org.springframework.context.ApplicationContext;
 
 public class CalcContextBuilderParallelRecursion implements CalcContextBuilder {
-    private ApplicationContext springApplicationContext;
-
-    public CalcContextBuilderParallelRecursion() {
-
-    }
-
-    public CalcContextBuilderParallelRecursion(ApplicationContext springApplicationContext) {
-        this.springApplicationContext = springApplicationContext;
-    }
 
     @Override
-    public <T> T buildClass(Class<T> clazz, Map<Class, Object> preparedProducersCtx) {
+    public <T> T buildClass(Class<T> clazz, ApplicationContext springAppCtx, Map<Class, Object> preparedProducersCtx) {
         Map<Class, Object> producersCtx = preparedProducersCtx != null ?
                 new ConcurrentHashMap<>(preparedProducersCtx) : new ConcurrentHashMap<>();
 
-        InstantiationTask task = new InstantiationTask(clazz, producersCtx, springApplicationContext);
+        InstantiationTask task = new InstantiationTask(clazz, producersCtx, springAppCtx);
         task.fork();
         task.join();
 

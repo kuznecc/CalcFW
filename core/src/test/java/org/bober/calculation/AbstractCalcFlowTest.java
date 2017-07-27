@@ -15,9 +15,11 @@ public abstract class AbstractCalcFlowTest {
     public static Collection<CalcFlow[]> flows() {
         // Instances of CalcFlow implementations that will be tested with all child tests
         return Stream
-                .of(new CalcFlowRecursion(),
-                        new CalcFlowGraph(),
-                        new CalcFlowParallelRecursion())
+                .of(
+                        CalcFlow.recursive(),
+                        CalcFlow.graph(),
+                        CalcFlow.parallelRecursion()
+                   )
                 .map(AbstractCalcFlowTest::toArray)
                 .collect(Collectors.toList());
     }

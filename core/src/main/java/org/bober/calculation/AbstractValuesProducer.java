@@ -3,6 +3,8 @@ package org.bober.calculation;
 import java.util.Collections;
 import java.util.Map;
 
+import org.bober.calculation.ValuesProducer;
+
 public abstract class AbstractValuesProducer implements ValuesProducer {
     private static final Map<String, Object> NULL_SINGLE_RESULT = Collections.singletonMap(RESULT, null);
 

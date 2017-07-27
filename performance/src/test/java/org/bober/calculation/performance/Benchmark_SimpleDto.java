@@ -1,14 +1,20 @@
 
 package org.bober.calculation.performance;
 
-import org.bober.calculation.*;
-import org.bober.calculation.annotation.ValuesProducerResult;
-import org.openjdk.jmh.annotations.*;
+import static java.util.Collections.singletonMap;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Collections.singletonMap;
+import org.bober.calculation.CalcFlow;
+import org.bober.calculation.ValuesProducer;
+import org.bober.calculation.annotation.ValuesProducerResult;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Warmup;
 
 public class Benchmark_SimpleDto {
 
@@ -18,7 +24,7 @@ public class Benchmark_SimpleDto {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object recursion() {
-        CalcFlow flow = new CalcFlowRecursion();
+        CalcFlow flow = CalcFlow.recursive();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }
@@ -34,7 +40,7 @@ public class Benchmark_SimpleDto {
     @Warmup(iterations = 4)
     @Fork(1)
     public Object graphSingleThread() {
-        CalcFlowGraph flow = new CalcFlowGraph();
+        CalcFlow flow = CalcFlow.recursive();
         Dto dto = flow.produceClass(Dto.class);
         return dto;
     }

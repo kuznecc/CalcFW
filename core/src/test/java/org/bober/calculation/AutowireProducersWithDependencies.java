@@ -21,7 +21,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
 
     @Test
     public void test_ProducerSourceReturnGoodValue() throws Exception {
-        TestValueSource.VALUE = TEST_VALUE;
+        TestValueSupplier.VALUE = TEST_VALUE;
         TestDto_ProducerWithDepended dto = flow.produceClass(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
@@ -31,7 +31,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
 
     @Test
     public void test_ProducerSourceReturnNull() throws Exception {
-        TestValueSource.VALUE = null;
+        TestValueSupplier.VALUE = null;
         TestDto_ProducerWithDepended dto = flow.produceClass(TestDto_ProducerWithDepended.class);
 
         assertThat(dto, notNullValue());
@@ -41,7 +41,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
     @Test
     public void test_ProducerCrossDependency() throws Exception {
         // complexP() = p1() + p2(P1)
-        TestValueSource.VALUE = TEST_VALUE;
+        TestValueSupplier.VALUE = TEST_VALUE;
         TestDto_ProducerCrossDependency dto = flow.produceClass(TestDto_ProducerCrossDependency.class);
 
         assertThat(dto, notNullValue());
@@ -58,7 +58,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
     public static class ProducerCrossDepended implements ValuesProducer {
         @ValuesProducerResult(producer = TestProducer.class)
         private Integer testProducer;
-        @ValuesProducerResult(producer = TestValueSource.class)
+        @ValuesProducerResult(producer = TestValueSupplier.class)
         private Integer valueSource;
 
         @Override
@@ -74,7 +74,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
     }
 
     public static class TestProducer implements ValuesProducer {
-        @ValuesProducerResult(producer = TestValueSource.class, required = false)
+        @ValuesProducerResult(producer = TestValueSupplier.class, required = false)
         private Integer valueSource;
 
         @Override
@@ -84,7 +84,7 @@ public class AutowireProducersWithDependencies extends AbstractCalcFlowTest {
     }
 
 
-    public static class TestValueSource implements ValuesProducer {
+    public static class TestValueSupplier implements ValuesProducer {
         public static Integer VALUE;
         @Override
         public Map<String, Object> getResult() {

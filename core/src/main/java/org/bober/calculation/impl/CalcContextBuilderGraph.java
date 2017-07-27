@@ -1,8 +1,13 @@
-package org.bober.calculation;
+package org.bober.calculation.impl;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+
+import org.bober.calculation.CalcContextBuilder;
+import org.bober.calculation.CalcFlowException;
+import org.bober.calculation.ContextBuilderUtil;
+import org.bober.calculation.ValuesProducer;
 import org.bober.calculation.annotation.PrepareValuesProducer;
 import org.bober.calculation.annotation.ValuesProducerResult;
 import org.springframework.context.ApplicationContext;
@@ -26,20 +31,14 @@ public class CalcContextBuilderGraph implements CalcContextBuilder {
     protected Map<Class, ChainedWrapper> wrappers = new HashMap<>();
     private Map<Class, Object> instancesCtx;
 
-    private ApplicationContext springApplicationContext;
-
-    public CalcContextBuilderGraph(ApplicationContext springApplicationContext) {
-        this.springApplicationContext = springApplicationContext;
-    }
-
     @Override
-    public <T> T buildClass(Class<T> clazz, Map<Class, Object> preparedProducersCtx) {
+    public <T> T buildClass(Class<T> clazz, ApplicationContext springAppCtx, Map<Class, Object> preparedProducersCtx) {
         instancesCtx = preparedProducersCtx != null ? preparedProducersCtx : new HashMap<>();
         preparedClasses = Collections.unmodifiableSet(instancesCtx.keySet());
         cachedRelations(clazz);
         cachedAllRelatedClasses(clazz);
         initRelationCounters();
-        initWrappers();
+        initWrappers(springAppCtx);
 
         initiateCalculationChain();
 
@@ -58,10 +57,10 @@ public class CalcContextBuilderGraph implements CalcContextBuilder {
     }
 
 
-    private void initWrappers() {
+    private void initWrappers(ApplicationContext springAppCtx) {
         for (Class clazz : allRelatedClasses) {
             wrappers.put(clazz,
-                    makeInstanceWrapper(clazz, wrappers, relations, springApplicationContext, instancesCtx, relationsCounters));
+                    makeInstanceWrapper(clazz, wrappers, relations, springAppCtx, instancesCtx, relationsCounters));
         }
     }
 
